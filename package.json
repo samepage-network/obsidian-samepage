@@ -1,0 +1,26 @@
+{
+  "name": "obsidian-samepage",
+  "version": "0.1.0",
+  "description": "Official Obsidian client into the inter-TFT-protocol",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dvargas92495/obsidian-samepage.git"
+  },
+  "keywords": [
+    "Obsidian",
+    "SamePage"
+  ],
+  "author": "dvargas92495 <dvargas92495@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dvargas92495/obsidian-samepage/issues"
+  },
+  "homepage": "https://github.com/dvargas92495/obsidian-samepage#readme",
+  "dependencies": {
+    "@samepage/client": "^0.9.1"
+  }
+}
