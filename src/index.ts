@@ -4,11 +4,15 @@ import defaultSettings, {
   DefaultSetting,
 } from "samepage/utils/defaultSettings";
 import setupSamePageClient from "samepage/protocols/setupSamePageClient";
-import setupSharePageWithNotebook from "samepage/protocols/sharePageWithNotebook";
-import UsageChart from "samepage/components/UsageChart";
+import type { NotificationContainerProps } from "samepage/components/NotificationContainer";
+import setupSharePageWithNotebook from "./protocols/sharePageWithNotebook";
 import { onAppEvent } from "samepage/internal/registerAppEventListener";
 import renderOverlay from "./utils/renderOverlay";
 import Loading from "./components/Loading";
+
+type Notifications = Awaited<
+  ReturnType<Required<NotificationContainerProps>["api"]["getNotifications"]>
+>;
 
 class SamePageSettingTab extends PluginSettingTab {
   plugin: SamePagePlugin;
@@ -29,8 +33,8 @@ class SamePageSettingTab extends PluginSettingTab {
       if (s.type === "boolean") {
         setting.addToggle((toggle) =>
           toggle.setValue(s.default).onChange((value) => {
-            this.plugin.settings[s.id] = value;
-            this.plugin.saveData(this.plugin.settings);
+            this.plugin.data.settings[s.id] = value;
+            this.plugin.save();
           })
         );
       }
@@ -38,13 +42,24 @@ class SamePageSettingTab extends PluginSettingTab {
   }
 }
 
+type PluginData = {
+  settings: { [k in DefaultSetting["id"]]?: boolean };
+  notifications: Record<string, Notifications[number]>;
+};
+
 class SamePagePlugin extends Plugin {
-  settings: Record<DefaultSetting["id"], boolean>;
+  data: PluginData = {
+    settings: {},
+    notifications: {},
+  };
   async onload() {
-    console.log("loadData", await this.loadData());
-    this.settings = {
-      ...Object.fromEntries(defaultSettings.map((s) => [s.id, s.default])),
-      ...(await this.loadData()),
+    const { settings, notifications } = (await this.loadData()) as PluginData;
+    this.data = {
+      settings: {
+        ...Object.fromEntries(defaultSettings.map((s) => [s.id, s.default])),
+        ...settings,
+      },
+      notifications,
     };
 
     this.addSettingTab(new SamePageSettingTab(this.app, this));
@@ -52,7 +67,7 @@ class SamePagePlugin extends Plugin {
     const self = this;
     const checkCallback: Record<string, boolean> = {};
     const { unload: unloadSamePageClient } = await setupSamePageClient({
-      isAutoConnect: this.settings["auto-connect"],
+      isAutoConnect: this.data.settings["auto-connect"],
       addCommand: ({ label, callback }) => {
         if (label in checkCallback) checkCallback[label] = true;
         else {
@@ -61,13 +76,13 @@ class SamePagePlugin extends Plugin {
             id: label.toLowerCase().replace(/ /g, "-"),
             name: label,
             checkCallback: (checking) => {
-                if (checkCallback[label]) {
-                    if (!checking) {
-                        callback();
-                    }
-                    return true;
+              if (checkCallback[label]) {
+                if (!checking) {
+                  callback();
                 }
-                return false;
+                return true;
+              }
+              return false;
             },
           });
         }
@@ -79,9 +94,6 @@ class SamePagePlugin extends Plugin {
       workspace: this.app.vault.getName(),
     });
     onAppEvent("log", (evt) => new Notice(evt.content));
-    onAppEvent("usage", (evt) =>
-      renderOverlay({ Overlay: UsageChart, props: evt })
-    );
     let removeLoadingCallback: (() => void) | undefined;
     onAppEvent("connection", (evt) => {
       if (evt.status === "PENDING")
@@ -89,11 +101,15 @@ class SamePagePlugin extends Plugin {
       else removeLoadingCallback?.();
     });
 
-    // const unloadSharePageWithNotebook = setupSharePageWithNotebook();
+    const unloadSharePageWithNotebook = setupSharePageWithNotebook(this);
 
     this.onunload = () => {
+      unloadSharePageWithNotebook();
       unloadSamePageClient();
     };
+  }
+  async save() {
+    this.saveData(this.data);
   }
 }
 
