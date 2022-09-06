@@ -20,9 +20,10 @@ jobs:
       - name: install
         run: npm install
       - name: build
-        run: npx samepage build --out main --external obsidian --include manifest.json --css styles
+        run: npx samepage build --out main --external obsidian --include manifest.json --include package.json --include README.md --css styles
       - name: package
-        run: zip -q dist/obsidian.zip README.md dist/main.js dist/styles.css package.json manifest.json
+        run: zip -q obsidian.zip README.md main.js styles.css package.json manifest.json
+        working-directory: dist
       - name: deploy
         run: |
           VERSION=$(cat package.json | grep version | cut -d ':' -f 2 | cut -d '"' -f 2)
