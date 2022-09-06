@@ -1,0 +1,29 @@
+name: Publish Web App
+on:
+  workflow_dispatch:
+  push:
+    branches: main
+    paths:
+      - "src/**"
+      - ".github/workflows/main.yaml"
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.SAMEPAGE_AWS_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.SAMEPAGE_AWS_ACCESS_SECRET }}
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: install
+        run: npm install
+      - name: build
+        run: npx samepage build --out main --external obsidian --include manifest.json --css styles
+      - name: package
+        run: zip -q dist/obsidian.zip README.md dist/main.js dist/styles.css package.json manifest.json
+      - name: deploy
+        run: |
+          VERSION=$(cat package.json | grep version | cut -d ':' -f 2 | cut -d '"' -f 2)
+          aws s3 cp dist/obsidian.zip s3://samepage.network/extensions/obsidian.zip --metadata Version=$VERSION

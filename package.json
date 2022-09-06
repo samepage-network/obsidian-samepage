@@ -4,6 +4,7 @@
   "description": "Official Obsidian client into the inter-TFT-protocol",
   "main": "./dist/index.js",
   "scripts": {
+    "start": "samepage dev --out main --external obsidian --include manifest.json --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles",
     "test": "jest"
   },
   "repository": {
@@ -20,7 +21,10 @@
     "url": "https://github.com/dvargas92495/obsidian-samepage/issues"
   },
   "homepage": "https://github.com/dvargas92495/obsidian-samepage#readme",
+  "devDependencies": {
+    "obsidian": "^0.16.0"
+  },
   "dependencies": {
-    "@samepage/client": "^0.9.1"
+    "samepage": "^0.10.6"
   }
 }

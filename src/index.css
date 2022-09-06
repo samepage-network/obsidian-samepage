@@ -1,0 +1,31 @@
+@import url("https://unpkg.com/normalize.css@^8.0.1");
+@import url("https://unpkg.com/@blueprintjs/core@^4.8.0/lib/css/blueprint.css");
+body {
+  font-size: 16px;
+  color: var(--text-normal);
+}
+a.page-title:hover {
+  text-decoration: none;
+}
+.flex-col-reverse {
+  flex-direction: column-reverse;
+}
+.top-2 {
+  top: 8px;
+}
+.right-2 {
+  right: 8px;
+}
+div.samepage-notification-container {
+  top: 40px;
+  bottom: unset;
+}
+.flex {
+  display: flex;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.items-center {
+  align-items: center;
+}

@@ -1,0 +1,10 @@
+{
+    "id": "samepage",
+    "name": "SamePage",
+    "version": "0.1.0",
+    "minAppVersion": "0.15.0",
+    "description": "Official Obsidian client into the inter-TFT-protocol",
+    "author": "dvargas92495",
+    "authorUrl": "https://samepage.network",
+    "isDesktopOnly": true
+}
