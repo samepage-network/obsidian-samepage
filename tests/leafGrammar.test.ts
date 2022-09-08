@@ -180,3 +180,24 @@ Some regular text to end.`,
     }
   )
 );
+
+test(
+  "Extra new lines at the end",
+  runTest("Extra new line\n\n", {
+    content: "Extra new line",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 14,
+        attributes: { identifier: "0", level: 1, viewType: "document" },
+      },
+      {
+        type: "block",
+        start: 14,
+        end: 14,
+        attributes: { identifier: "1", level: 1, viewType: "document" },
+      },
+    ],
+  })
+);

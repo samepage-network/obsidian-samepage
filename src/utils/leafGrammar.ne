@@ -19,7 +19,7 @@ import lexer, {
 
 @lexer lexer
 
-main -> ( tokens %newLine {% id %} | %newLine {% createEmpty %}):* tokens {% createBlockTokens %}
+main -> ( tokens %newLine {% id %} | %newLine {% createEmpty %}):* (tokens {% id %}):? {% createBlockTokens %}
 
 tokens -> token:+ {% disambiguateTokens %}
 

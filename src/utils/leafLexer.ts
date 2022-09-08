@@ -30,9 +30,9 @@ export const setBlockUuidGenerator = (fcn: typeof blockUuidGenerator) =>
   (blockUuidGenerator = fcn);
 
 export const createBlockTokens: Processor<InitialSchema> = (data) => {
-  const tokens = (data as (InitialSchema[] | InitialSchema)[]).flatMap((d) =>
-    Array.isArray(d) ? d : [d]
-  );
+  const tokens = (data as (InitialSchema[] | InitialSchema)[])
+    .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
+    .filter((d): d is InitialSchema => !!d);
   return tokens.reduce(
     (total, current, index) => ({
       content: `${total.content}${current.content}`,

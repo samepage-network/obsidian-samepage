@@ -14,6 +14,7 @@ const applyState = async (
   state: Schema,
   plugin: SamePagePlugin
 ) => {
+  let blocks = 0;
   const expectedText = state.annotations.reduce((p, c, index, all) => {
     const appliedAnnotation =
       c.type === "bold"
@@ -39,6 +40,12 @@ const applyState = async (
         : c.type === "block"
         ? { suffix: "\n", prefix: "" }
         : { prefix: "", suffix: "" };
+    if (c.type === "block") {
+      const obsidianId = `${notebookPageId}~${blocks}`;
+      plugin.data.obsidianToSamepage[obsidianId] = c.attributes.identifier;
+      plugin.data.samepageToObsidian[c.attributes.identifier] = obsidianId;
+      blocks++;
+    }
     all.slice(index + 1).forEach((a) => {
       a.start +=
         (a.start >= c.start ? appliedAnnotation.prefix.length : 0) +
@@ -56,7 +63,9 @@ const applyState = async (
     `${notebookPageId}.md`
   );
   if (abstractFile instanceof TFile) {
-    plugin.app.vault.modify(abstractFile, expectedText);
+    return plugin.app.vault
+      .modify(abstractFile, expectedText)
+      .then(() => plugin.save());
   }
 };
 
@@ -173,6 +182,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
   let updateTimeout = 0;
   const bodyListener = async (e: KeyboardEvent) => {
     const el = e.target as HTMLElement;
+    if (e.metaKey) return;
     if (/^Arrow/.test(e.key)) return;
     if (el.tagName === "DIV" && el.classList.contains("cm-content")) {
       const notebookPageId =
