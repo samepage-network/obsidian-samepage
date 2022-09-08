@@ -29,3 +29,6 @@ div.samepage-notification-container {
 .items-center {
   align-items: center;
 }
+div.view-header {
+  height: fit-content;
+}

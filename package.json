@@ -4,7 +4,8 @@
   "description": "Official Obsidian client into the inter-TFT-protocol",
   "main": "./dist/index.js",
   "scripts": {
-    "start": "samepage dev --out main --external obsidian --include manifest.json --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles",
+    "start": "samepage dev --external obsidian --include manifest.json --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles",
+    "pretest": "npx nearleyc src/utils/leafGrammar.ne --out src/utils/leafGrammar.ts",
     "test": "jest"
   },
   "repository": {
@@ -22,9 +23,25 @@
   },
   "homepage": "https://github.com/dvargas92495/obsidian-samepage#readme",
   "devDependencies": {
+    "@types/jest": "^26.0.23",
+    "esbuild-jest": "^0.5.0",
+    "jest": "^26.6.3",
+    "jest-transform-nearley": "^2.0.0",
     "obsidian": "^0.16.0"
   },
   "dependencies": {
-    "samepage": "^0.12.1"
+    "samepage": "^0.12.8"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(t|j)sx?$": "esbuild-jest"
+    },
+    "testRegex": "/tests/.*\\.test\\.tsx?$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx"
+    ]
   }
 }

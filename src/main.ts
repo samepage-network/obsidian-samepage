@@ -1,4 +1,3 @@
-import "./index.css";
 import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 import defaultSettings, {
   DefaultSetting,
@@ -45,21 +44,42 @@ class SamePageSettingTab extends PluginSettingTab {
 type PluginData = {
   settings: { [k in DefaultSetting["id"]]?: boolean };
   notifications: Record<string, Notifications[number]>;
+  pages: Record<string, number[]>;
+  obsidianToSamepage: Record<string, string>;
+  samepageToObsidian: Record<string, string>;
 };
+
+type RawPluginData = {
+  settings?: { [k in DefaultSetting["id"]]?: boolean };
+  notifications?: Record<string, Notifications[number]>;
+  pages?: Record<string, number[]>;
+  mapping?: [string, string][];
+} | null;
 
 class SamePagePlugin extends Plugin {
   data: PluginData = {
     settings: {},
     notifications: {},
+    pages: {},
+    obsidianToSamepage: {},
+    samepageToObsidian: {},
   };
   async onload() {
-    const { settings, notifications } = (await this.loadData()) as PluginData;
+    const {
+      settings = {},
+      notifications = {},
+      pages = {},
+      mapping = [],
+    } = ((await this.loadData()) as RawPluginData) || {};
     this.data = {
       settings: {
         ...Object.fromEntries(defaultSettings.map((s) => [s.id, s.default])),
         ...settings,
       },
       notifications,
+      pages,
+      obsidianToSamepage: Object.fromEntries(mapping),
+      samepageToObsidian: Object.fromEntries(mapping.map(([k, v]) => [v, k])),
     };
 
     this.addSettingTab(new SamePageSettingTab(this.app, this));
@@ -109,7 +129,8 @@ class SamePagePlugin extends Plugin {
     };
   }
   async save() {
-    this.saveData(this.data);
+    const { obsidianToSamepage, samepageToObsidian, ...rest } = this.data;
+    this.saveData({ ...rest, mapping: Object.entries(obsidianToSamepage) });
   }
 }
 
