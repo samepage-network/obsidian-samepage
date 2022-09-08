@@ -1,6 +1,6 @@
 {
   "name": "obsidian-samepage",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Official Obsidian client into the inter-TFT-protocol",
   "main": "./dist/index.js",
   "scripts": {
