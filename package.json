@@ -30,7 +30,7 @@
     "obsidian": "^0.16.0"
   },
   "dependencies": {
-    "samepage": "^0.12.8"
+    "samepage": "^0.12.12"
   },
   "jest": {
     "transform": {

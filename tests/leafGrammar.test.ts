@@ -41,11 +41,10 @@ Some regular text to end.`,
           type: "block",
           start: 0,
           end: 18,
-          attributes: { identifier: "0", level: 1, viewType: "document" },
+          attributes: { level: 1, viewType: "document" },
         },
         {
           attributes: {
-            identifier: "1",
             level: 1,
             viewType: "document",
           },
@@ -55,7 +54,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "2",
             level: 1,
             viewType: "document",
           },
@@ -65,7 +63,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "3",
             level: 1,
             viewType: "document",
           },
@@ -75,7 +72,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "4",
             level: 1,
             viewType: "document",
           },
@@ -85,7 +81,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "5",
             level: 1,
             viewType: "document",
           },
@@ -95,7 +90,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "6",
             level: 1,
             viewType: "document",
           },
@@ -105,7 +99,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "7",
             level: 1,
             viewType: "document",
           },
@@ -115,7 +108,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "8",
             level: 1,
             viewType: "document",
           },
@@ -125,7 +117,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "9",
             level: 1,
             viewType: "document",
           },
@@ -135,7 +126,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "10",
             level: 1,
             viewType: "document",
           },
@@ -148,7 +138,6 @@ Some regular text to end.`,
         { type: "strikethrough", start: 146, end: 152 },
         {
           attributes: {
-            identifier: "11",
             level: 1,
             viewType: "document",
           },
@@ -158,7 +147,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "12",
             level: 1,
             viewType: "document",
           },
@@ -168,7 +156,6 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            identifier: "13",
             level: 1,
             viewType: "document",
           },
@@ -190,13 +177,13 @@ test(
         type: "block",
         start: 0,
         end: 14,
-        attributes: { identifier: "0", level: 1, viewType: "document" },
+        attributes: { level: 1, viewType: "document" },
       },
       {
         type: "block",
         start: 14,
         end: 14,
-        attributes: { identifier: "1", level: 1, viewType: "document" },
+        attributes: { level: 1, viewType: "document" },
       },
     ],
   })

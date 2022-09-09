@@ -16,9 +16,10 @@ a.page-title:hover {
 .right-2 {
   right: 8px;
 }
-div.samepage-notification-container {
-  top: 40px;
-  bottom: unset;
+div#samepage-notification-container {
+  top: 60px;
+  right: 40px;
+  position: absolute;
 }
 .flex {
   display: flex;

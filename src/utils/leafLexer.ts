@@ -1,7 +1,6 @@
 import { compileLexer } from "samepage/utils/atJsonTokens";
 import nearley from "nearley";
 import { InitialSchema } from "samepage/types";
-import { v4 } from "uuid";
 
 const lexer = compileLexer(
   {
@@ -22,13 +21,6 @@ export const createEmpty: Processor<InitialSchema> = () => ({
   annotations: [],
 });
 
-let blockUuidGenerator = (_: number) => {
-  return v4();
-};
-
-export const setBlockUuidGenerator = (fcn: typeof blockUuidGenerator) =>
-  (blockUuidGenerator = fcn);
-
 export const createBlockTokens: Processor<InitialSchema> = (data) => {
   const tokens = (data as (InitialSchema[] | InitialSchema)[])
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
@@ -42,7 +34,6 @@ export const createBlockTokens: Processor<InitialSchema> = (data) => {
           start: total.content.length,
           end: total.content.length + current.content.length,
           attributes: {
-            identifier: blockUuidGenerator(index),
             level: 1,
             viewType: "document",
           },

@@ -4,9 +4,7 @@ import atJsonParser from "samepage/utils/atJsonParser";
 // @ts-ignore figure this out later - it compiles at least
 import leafGrammar from "../utils/leafGrammar.ne";
 import type SamePagePlugin from "../main";
-import { TFile } from "obsidian";
-import { setBlockUuidGenerator } from "../utils/leafLexer";
-import { v4 } from "uuid";
+import { EventRef, TFile } from "obsidian";
 import Automerge from "automerge";
 
 const applyState = async (
@@ -14,7 +12,6 @@ const applyState = async (
   state: Schema,
   plugin: SamePagePlugin
 ) => {
-  let blocks = 0;
   const expectedText = state.annotations.reduce((p, c, index, all) => {
     const appliedAnnotation =
       c.type === "bold"
@@ -40,12 +37,6 @@ const applyState = async (
         : c.type === "block"
         ? { suffix: "\n", prefix: "" }
         : { prefix: "", suffix: "" };
-    if (c.type === "block") {
-      const obsidianId = `${notebookPageId}~${blocks}`;
-      plugin.data.obsidianToSamepage[obsidianId] = c.attributes.identifier;
-      plugin.data.samepageToObsidian[c.attributes.identifier] = obsidianId;
-      blocks++;
-    }
     all.slice(index + 1).forEach((a) => {
       a.start +=
         (a.start >= c.start ? appliedAnnotation.prefix.length : 0) +
@@ -78,20 +69,10 @@ const calculateState = async (
   );
   const content =
     abstractFile instanceof TFile
-      ? await plugin.app.vault.read(abstractFile)
+      ? await plugin.app.vault.cachedRead(abstractFile)
       : "";
 
   let needsSaving = false;
-  setBlockUuidGenerator((index) => {
-    const obsidianId = `${notebookPageId}~${index}`;
-    const existingUuid = plugin.data.obsidianToSamepage[obsidianId];
-    if (existingUuid) return existingUuid;
-    needsSaving = true;
-    const samepageUuid = v4();
-    plugin.data.samepageToObsidian[samepageUuid] = obsidianId;
-    plugin.data.obsidianToSamepage[obsidianId] = samepageUuid;
-    return samepageUuid;
-  });
   const schema = atJsonParser(leafGrammar, content);
   if (needsSaving) await plugin.save();
   return schema;
@@ -179,7 +160,13 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       },
     });
 
-  let updateTimeout = 0;
+  let refreshRef: EventRef | undefined;
+  const clearRefreshRef = () => {
+    if (refreshRef) {
+      plugin.app.vault.offref(refreshRef);
+      refreshRef = undefined;
+    }
+  };
   const bodyListener = async (e: KeyboardEvent) => {
     const el = e.target as HTMLElement;
     if (e.metaKey) return;
@@ -193,27 +180,35 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
         //   )?.textContent || "";
         plugin.app.workspace.getActiveFile()?.basename;
       if (notebookPageId && isShared(notebookPageId)) {
-        window.clearTimeout(updateTimeout);
-        updateTimeout = window.setTimeout(async () => {
-          const doc = await calculateState(notebookPageId, plugin);
-          updatePage({
-            notebookPageId,
-            label: `Refresh`,
-            callback: (oldDoc) => {
-              oldDoc.content.deleteAt?.(0, oldDoc.content.length);
-              oldDoc.content.insertAt?.(0, ...new Automerge.Text(doc.content));
-              if (!oldDoc.annotations) oldDoc.annotations = [];
-              oldDoc.annotations.splice(0, oldDoc.annotations.length);
-              doc.annotations.forEach((a) => oldDoc.annotations.push(a));
-            },
-          });
-        }, 1000);
+        clearRefreshRef();
+        refreshRef = plugin.app.vault.on(
+          "modify",
+          async () => {
+            clearRefreshRef();
+            const doc = await calculateState(notebookPageId, plugin);
+            updatePage({
+              notebookPageId,
+              label: `Refresh`,
+              callback: (oldDoc) => {
+                oldDoc.content.deleteAt?.(0, oldDoc.content.length);
+                oldDoc.content.insertAt?.(
+                  0,
+                  ...new Automerge.Text(doc.content)
+                );
+                if (!oldDoc.annotations) oldDoc.annotations = [];
+                oldDoc.annotations.splice(0, oldDoc.annotations.length);
+                doc.annotations.forEach((a) => oldDoc.annotations.push(a));
+              },
+            });
+          },
+          1000
+        );
       }
     }
   };
   plugin.registerDomEvent(document.body, "keydown", bodyListener);
   return () => {
-    window.clearTimeout(updateTimeout);
+    clearRefreshRef();
     unload();
   };
 };

@@ -1,4 +1,11 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
+import {
+  App,
+  Notice,
+  Plugin,
+  PluginSettingTab,
+  Setting,
+  TFile,
+} from "obsidian";
 import defaultSettings, {
   DefaultSetting,
 } from "samepage/utils/defaultSettings";
@@ -45,15 +52,12 @@ type PluginData = {
   settings: { [k in DefaultSetting["id"]]?: boolean };
   notifications: Record<string, Notifications[number]>;
   pages: Record<string, number[]>;
-  obsidianToSamepage: Record<string, string>;
-  samepageToObsidian: Record<string, string>;
 };
 
 type RawPluginData = {
   settings?: { [k in DefaultSetting["id"]]?: boolean };
   notifications?: Record<string, Notifications[number]>;
   pages?: Record<string, number[]>;
-  mapping?: [string, string][];
 } | null;
 
 class SamePagePlugin extends Plugin {
@@ -61,15 +65,12 @@ class SamePagePlugin extends Plugin {
     settings: {},
     notifications: {},
     pages: {},
-    obsidianToSamepage: {},
-    samepageToObsidian: {},
   };
   async onload() {
     const {
       settings = {},
       notifications = {},
       pages = {},
-      mapping = [],
     } = ((await this.loadData()) as RawPluginData) || {};
     this.data = {
       settings: {
@@ -78,8 +79,6 @@ class SamePagePlugin extends Plugin {
       },
       notifications,
       pages,
-      obsidianToSamepage: Object.fromEntries(mapping),
-      samepageToObsidian: Object.fromEntries(mapping.map(([k, v]) => [v, k])),
     };
 
     this.addSettingTab(new SamePageSettingTab(this.app, this));
@@ -108,7 +107,7 @@ class SamePagePlugin extends Plugin {
         }
       },
       removeCommand: ({ label }) => {
-        checkCallback[label] = false;
+        if (label in checkCallback) checkCallback[label] = false;
       },
       app: "Obsidian",
       workspace: this.app.vault.getName(),
@@ -129,8 +128,7 @@ class SamePagePlugin extends Plugin {
     };
   }
   async save() {
-    const { obsidianToSamepage, samepageToObsidian, ...rest } = this.data;
-    this.saveData({ ...rest, mapping: Object.entries(obsidianToSamepage) });
+    this.saveData(this.data);
   }
 }
 
