@@ -14,8 +14,6 @@ type Processor<T> = (
   ...args: Parameters<nearley.Postprocessor>
 ) => T | Parameters<nearley.Postprocessor>[2];
 
-const createBlockToken = () => {};
-
 export const createEmpty: Processor<InitialSchema> = () => ({
   content: "",
   annotations: [],

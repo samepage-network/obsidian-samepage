@@ -5,6 +5,7 @@
 @{%
 import {
    createBoldToken,
+   createEmpty,
    createItalicsToken,
    createLinkToken,
    createStrikethroughToken,
@@ -12,7 +13,6 @@ import {
    disambiguateTokens,
 } from "samepage/utils/atJsonTokens";
 import lexer, {
-   createEmpty,
    createBlockTokens,
 } from "./leafLexer";
 %}
