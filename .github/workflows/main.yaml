@@ -1,4 +1,4 @@
-name: Publish Web App
+name: Publish Extension
 on:
   workflow_dispatch:
   push:

@@ -20,6 +20,12 @@ type Notifications = Awaited<
   ReturnType<Required<NotificationContainerProps>["api"]["getNotifications"]>
 >;
 
+const IGNORED_LOGS = new Set([
+  "list-pages-success",
+  "load-remote-message",
+  "update-success",
+]);
+
 class SamePageSettingTab extends PluginSettingTab {
   plugin: SamePagePlugin;
 
@@ -112,7 +118,10 @@ class SamePagePlugin extends Plugin {
       app: "Obsidian",
       workspace: this.app.vault.getName(),
     });
-    onAppEvent("log", (evt) => new Notice(evt.content));
+    onAppEvent(
+      "log",
+      (evt) => !IGNORED_LOGS.has(evt.id) && new Notice(evt.content)
+    );
     let removeLoadingCallback: (() => void) | undefined;
     onAppEvent("connection", (evt) => {
       if (evt.status === "PENDING")
