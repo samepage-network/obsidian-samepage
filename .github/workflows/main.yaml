@@ -21,10 +21,5 @@ jobs:
         run: npm install
       - name: build
         run: npx samepage build --external obsidian --include manifest.json --include package.json --include README.md --css styles
-      - name: package
-        run: zip -q obsidian.zip README.md main.js styles.css package.json manifest.json
-        working-directory: dist
-      - name: deploy
-        run: |
-          VERSION=$(cat package.json | grep version | cut -d ':' -f 2 | cut -d '"' -f 2)
-          aws s3 cp dist/obsidian.zip s3://samepage.network/extensions/obsidian.zip --metadata Version=$VERSION
+      - name: publish
+        run: npx samepage publish

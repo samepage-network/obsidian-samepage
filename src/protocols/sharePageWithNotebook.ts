@@ -6,6 +6,7 @@ import leafGrammar from "../utils/leafGrammar.ne";
 import type SamePagePlugin from "../main";
 import { EventRef, TFile } from "obsidian";
 import Automerge from "automerge";
+import apps from "samepage/internal/apps";
 
 const applyState = async (
   notebookPageId: string,
@@ -35,7 +36,7 @@ const applyState = async (
             suffix: `](${c.attributes.href})`,
           }
         : c.type === "block"
-        ? { suffix: "\n", prefix: "" }
+        ? { suffix: "\n", prefix: "".padStart(c.attributes.level - 1, "\t") }
         : { prefix: "", suffix: "" };
     all.slice(index + 1).forEach((a) => {
       a.start +=
@@ -110,17 +111,30 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
         },
         notificationContainerProps: {
           actions: {
-            accept: ({ app, workspace, pageUuid }) =>
-              plugin.app.vault.create(pageUuid, "").then((file) =>
-                joinPage({
-                  pageUuid,
-                  notebookPageId: file.basename,
-                  source: { app: Number(app) as AppId, workspace },
-                }).catch((e) => {
-                  plugin.app.vault.delete(file);
-                  return Promise.reject(e);
-                })
-              ),
+            accept: ({ app, workspace, pageUuid, title }) =>
+              plugin.app.vault
+                .create(`${title}.md`, "")
+                .then((file) =>
+                  joinPage({
+                    pageUuid,
+                    notebookPageId: file.basename,
+                    source: { app: Number(app) as AppId, workspace },
+                  }).catch((e) => {
+                    plugin.app.vault.delete(file);
+                    return Promise.reject(e);
+                  })
+                )
+                .then(() => {
+                  const active = plugin.app.workspace.getActiveFile();
+                  if (active) {
+                    active.vault.append(
+                      active,
+                      `\nAccepted page [[${title}]] from ${
+                        apps[Number(app)].name
+                      } / ${workspace}`
+                    );
+                  }
+                }),
 
             reject: async ({ workspace, app, pageUuid }) =>
               rejectPage({

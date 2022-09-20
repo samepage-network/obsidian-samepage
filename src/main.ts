@@ -4,7 +4,6 @@ import {
   Plugin,
   PluginSettingTab,
   Setting,
-  TFile,
 } from "obsidian";
 import defaultSettings, {
   DefaultSetting,
