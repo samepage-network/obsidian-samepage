@@ -4,8 +4,9 @@ import { InitialSchema } from "samepage/types";
 
 const lexer = compileLexer(
   {
-    text: { match: /[^~_*[\]\n]+/, lineBreaks: true },
+    text: { match: /[^~_*[\]\n\t]+/, lineBreaks: true },
     newLine: { match: /\n/, lineBreaks: true },
+    tab: { match: /\t/ },
   },
   ["highlight"]
 );
@@ -14,15 +15,21 @@ type Processor<T> = (
   ...args: Parameters<nearley.Postprocessor>
 ) => T | Parameters<nearley.Postprocessor>[2];
 
-export const createEmpty: Processor<InitialSchema> = () => ({
-  content: "",
-  annotations: [],
-});
+export const createEmpty: Processor<InitialSchema> = (data) => {
+  const [tabs] = data as [moo.Token[]];
+  return {
+    content: "",
+    annotations: [],
+    tabs: tabs.length,
+  };
+};
+
+type InitialSchemaWithTabs = InitialSchema & { tabs: number };
 
 export const createBlockTokens: Processor<InitialSchema> = (data) => {
-  const tokens = (data as (InitialSchema[] | InitialSchema)[])
+  const tokens = (data as (InitialSchemaWithTabs[] | InitialSchemaWithTabs)[])
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
-    .filter((d): d is InitialSchema => !!d);
+    .filter((d): d is InitialSchemaWithTabs => !!d);
   return tokens.reduce(
     (total, current, index) => ({
       content: `${total.content}${current.content}`,
@@ -32,7 +39,7 @@ export const createBlockTokens: Processor<InitialSchema> = (data) => {
           start: total.content.length,
           end: total.content.length + current.content.length,
           attributes: {
-            level: 1,
+            level: current.tabs + 1,
             viewType: "document",
           },
         })

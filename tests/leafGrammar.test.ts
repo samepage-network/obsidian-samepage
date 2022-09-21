@@ -1,11 +1,10 @@
-// TODO make this jest friendly
+// TODO make this test friendly
 import leafGrammar from "../src/utils/leafGrammar";
 import type { InitialSchema } from "samepage/types";
 import atJsonParser from "samepage/utils/atJsonParser";
-import { setBlockUuidGenerator } from "../src/utils/leafLexer";
+import { test, expect } from "@playwright/test";
 
 const runTest = (md: string, expected: InitialSchema) => () => {
-  setBlockUuidGenerator((i) => i.toString());
   const output = atJsonParser(leafGrammar, md);
   expect(output).toBeTruthy();
   expect(output.content).toEqual(expected.content);
@@ -35,7 +34,7 @@ Here's some **bold** an *italics* a ~~strike~~ a ^^highlight^^. No highlighting!
 Some regular text to end.`,
     {
       content:
-        "Some text to startText after newline {{no component support}} word\tA block quote - handle laterText after blockquoteHere's some bold an italics a strike a ^^highlight^^. No highlighting!- First bullet- Second bulletSome regular text to end.",
+        "Some text to startText after newline {{no component support}} wordA block quote - handle laterText after blockquoteHere's some bold an italics a strike a ^^highlight^^. No highlighting!- First bullet- Second bulletSome regular text to end.",
       annotations: [
         {
           type: "block",
@@ -90,10 +89,10 @@ Some regular text to end.`,
         },
         {
           attributes: {
-            level: 1,
+            level: 2,
             viewType: "document",
           },
-          end: 95,
+          end: 94,
           start: 66,
           type: "block",
         },
@@ -102,8 +101,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 95,
-          start: 95,
+          end: 94,
+          start: 94,
           type: "block",
         },
         {
@@ -111,8 +110,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 116,
-          start: 95,
+          end: 115,
+          start: 94,
           type: "block",
         },
         {
@@ -120,8 +119,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 116,
-          start: 116,
+          end: 115,
+          start: 115,
           type: "block",
         },
         {
@@ -129,29 +128,20 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 186,
-          start: 116,
+          end: 185,
+          start: 115,
           type: "block",
         },
-        { type: "bold", start: 128, end: 132 },
-        { type: "italics", start: 136, end: 143 },
-        { type: "strikethrough", start: 146, end: 152 },
+        { type: "bold", start: 127, end: 131 },
+        { type: "italics", start: 135, end: 142 },
+        { type: "strikethrough", start: 145, end: 151 },
         {
           attributes: {
             level: 1,
             viewType: "document",
           },
-          end: 200,
-          start: 186,
-          type: "block",
-        },
-        {
-          attributes: {
-            level: 1,
-            viewType: "document",
-          },
-          end: 215,
-          start: 200,
+          end: 199,
+          start: 185,
           type: "block",
         },
         {
@@ -159,8 +149,17 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 240,
-          start: 215,
+          end: 214,
+          start: 199,
+          type: "block",
+        },
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 239,
+          start: 214,
           type: "block",
         },
       ],
@@ -183,6 +182,33 @@ test(
         type: "block",
         start: 14,
         end: 14,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
+);
+
+test(
+  "Blocks, 1 indented",
+  runTest("Some Content\n\tNested Content\nRoot Content", {
+    content: "Some ContentNested ContentRoot Content",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 12,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "block",
+        start: 12,
+        end: 26,
+        attributes: { level: 2, viewType: "document" },
+      },
+      {
+        type: "block",
+        start: 26,
+        end: 38,
         attributes: { level: 1, viewType: "document" },
       },
     ],

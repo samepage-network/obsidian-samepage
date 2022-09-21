@@ -5,7 +5,6 @@
 @{%
 import {
    createBoldToken,
-   createEmpty,
    createItalicsToken,
    createLinkToken,
    createStrikethroughToken,
@@ -14,12 +13,13 @@ import {
 } from "samepage/utils/atJsonTokens";
 import lexer, {
    createBlockTokens,
+   createEmpty,
 } from "./leafLexer";
 %}
 
 @lexer lexer
 
-main -> ( tokens %newLine {% id %} | %newLine {% createEmpty %}):* (tokens {% id %}):? {% createBlockTokens %}
+main -> ( %tab:* tokens %newLine {% ([a,b]) =>  ({...b, tabs: a.length})%} | %tab:* %newLine {% createEmpty %}):* (%tab:* tokens {% ([a,b]) =>  ({...b, tabs: a.length})%}):? {% createBlockTokens %}
 
 tokens -> token:+ {% disambiguateTokens %}
 

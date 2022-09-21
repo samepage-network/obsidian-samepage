@@ -6,7 +6,7 @@
   "scripts": {
     "start": "samepage dev --format cjs --external obsidian --include manifest.json --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles",
     "pretest": "npx nearleyc src/utils/leafGrammar.ne --out src/utils/leafGrammar.ts",
-    "test": "jest"
+    "test": "samepage test --format cjs --external obsidian --include manifest.json --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles"
   },
   "repository": {
     "type": "git",
@@ -23,22 +23,9 @@
   },
   "homepage": "https://github.com/dvargas92495/obsidian-samepage#readme",
   "devDependencies": {
-    "jest-transform-nearley": "^2.0.0",
     "obsidian": "^0.16.0"
   },
   "dependencies": {
-    "samepage": "^0.16.13"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.(t|j)sx?$": "esbuild-jest"
-    },
-    "testRegex": "/tests/.*\\.test\\.tsx?$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx"
-    ]
+    "samepage": "^0.17.5"
   }
 }

@@ -10,7 +10,7 @@ import defaultSettings, {
 } from "samepage/utils/defaultSettings";
 import setupSamePageClient from "samepage/protocols/setupSamePageClient";
 import type { NotificationContainerProps } from "samepage/components/NotificationContainer";
-import setupSharePageWithNotebook from "./protocols/sharePageWithNotebook";
+import setupSharePageWithNotebook, { granularChanges } from "./protocols/sharePageWithNotebook";
 import { onAppEvent } from "samepage/internal/registerAppEventListener";
 import renderOverlay from "./utils/renderOverlay";
 import Loading from "./components/Loading";
@@ -45,6 +45,9 @@ class SamePageSettingTab extends PluginSettingTab {
         setting.addToggle((toggle) =>
           toggle.setValue(s.default).onChange((value) => {
             this.plugin.data.settings[s.id] = value;
+            if (s.id === "granular-changes") {
+              granularChanges.enabled = value;
+            }
             this.plugin.save();
           })
         );
