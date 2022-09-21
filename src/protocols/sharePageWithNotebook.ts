@@ -7,7 +7,6 @@ import type SamePagePlugin from "../main";
 import { EventRef, MarkdownView, TFile, WorkspaceLeaf } from "obsidian";
 import Automerge from "automerge";
 import apps from "samepage/internal/apps";
-import grammar from "../utils/leafGrammar";
 
 const applyState = async (
   notebookPageId: string,
@@ -211,7 +210,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
           previousSelection;
         const getBlockAnnotationStart = () => {
           const md = view.editor.getValue();
-          const { annotations } = atJsonParser(grammar, md);
+          const { annotations } = atJsonParser(leafGrammar, md);
           return (
             annotations.filter((b) => b.type === "block")[blockStart]?.start ||
             0

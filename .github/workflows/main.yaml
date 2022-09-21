@@ -22,4 +22,4 @@ jobs:
       - name: build
         run: npx samepage build --external obsidian --include manifest.json --include package.json --include README.md --css styles --format cjs
       - name: publish
-        run: npx samepage publish --domain samepage.network/extensions --path roam
+        run: npx samepage publish --domain samepage.network/extensions --path obsidian
