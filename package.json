@@ -4,9 +4,9 @@
   "description": "Official Obsidian client into the inter-TFT-protocol",
   "main": "./dist/index.js",
   "scripts": {
-    "start": "samepage dev --format cjs --external obsidian --include manifest.json --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles",
+    "start": "samepage dev --format cjs --external obsidian --include manifest.json --include node_modules/samepage/samepage.css --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles",
     "pretest": "npx nearleyc src/utils/leafGrammar.ne --out src/utils/leafGrammar.ts",
-    "test": "samepage test --format cjs --external obsidian --include manifest.json --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles"
+    "test": "samepage test --format cjs --external obsidian --include manifest.json --include node_modules/samepage/samepage.css --mirror $HOME/Documents/obsidian/obsidian-vargas/.obsidian/plugins/obsidian-samepage --css styles"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,6 @@
     "obsidian": "^0.16.0"
   },
   "dependencies": {
-    "samepage": "^0.17.5"
+    "samepage": "^0.18.3"
   }
 }

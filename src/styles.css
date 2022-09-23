@@ -1,5 +1,3 @@
-@import url("https://unpkg.com/normalize.css@^8.0.1");
-@import url("https://unpkg.com/@blueprintjs/core@^4.8.0/lib/css/blueprint.css");
 body {
   font-size: 16px;
   color: var(--text-normal);
@@ -7,29 +5,18 @@ body {
 a.page-title:hover {
   text-decoration: none;
 }
-.flex-col-reverse {
-  flex-direction: column-reverse;
-}
-.top-2 {
-  top: 8px;
-}
-.right-2 {
-  right: 8px;
-}
-div#samepage-notification-container {
-  top: 60px;
-  right: 40px;
-  position: absolute;
-}
-.flex {
-  display: flex;
-}
-.justify-between {
-  justify-content: space-between;
-}
-.items-center {
-  align-items: center;
-}
 div.view-header {
   height: fit-content;
+}
+span.samepage-shared-page-status {
+  margin-bottom: 0;
+}
+.samepage-notification-container h4 {
+  margin: 4px 0;
+}
+.samepage-notification-container h5 {
+  margin: 8px 0;
+}
+.samepage-notification-container {
+  color: black;
 }
