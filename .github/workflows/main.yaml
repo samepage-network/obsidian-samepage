@@ -20,6 +20,6 @@ jobs:
       - name: install
         run: npm install
       - name: build
-        run: npx samepage build --external obsidian --include manifest.json --include package.json --include README.md --css styles --format cjs
+        run: npx samepage build --external obsidian --include manifest.json --include package.json --include README.md --include node_modules/samepage/samepage.css --css styles --format cjs
       - name: publish
         run: npx samepage publish --domain samepage.network/extensions --path obsidian
