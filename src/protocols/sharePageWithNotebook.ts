@@ -124,7 +124,6 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
                 joinPage({
                   pageUuid,
                   notebookPageId: file.basename,
-                  source: { app: Number(app) as AppId, workspace },
                 }).catch((e) => {
                   plugin.app.vault.delete(file);
                   return Promise.reject(e);
@@ -141,11 +140,9 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
                   );
                 }
               }),
-
-          reject: async ({ workspace, app, pageUuid }) =>
+          reject: async ({ title }) =>
             rejectPage({
-              source: { app: Number(app) as AppId, workspace },
-              pageUuid,
+              notebookPageId: title,
             }),
         },
         api: {

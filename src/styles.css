@@ -20,3 +20,6 @@ span.samepage-shared-page-status {
 .samepage-notification-container {
   color: black;
 }
+.samepage-shared-page-status img {
+  margin: 0;
+}
