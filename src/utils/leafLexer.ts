@@ -1,10 +1,11 @@
-import { compileLexer } from "samepage/utils/atJsonTokens";
+import { compileLexer, DEFAULT_TOKENS } from "samepage/utils/atJsonTokens";
 import nearley from "nearley";
 import { InitialSchema } from "samepage/types";
 
 const lexer = compileLexer(
   {
-    text: { match: /[^~_*[\]\n\t]+/, lineBreaks: true },
+    url: DEFAULT_TOKENS.url,
+    text: { match: /[^~_*[\]\n\t!()]+/, lineBreaks: true },
     newLine: { match: /\n/, lineBreaks: true },
     tab: { match: /\t/ },
   },

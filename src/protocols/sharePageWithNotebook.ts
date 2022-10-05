@@ -1,67 +1,53 @@
-import type { AppId, Schema } from "samepage/types";
+import type { Schema } from "samepage/types";
 import loadSharePageWithNotebook from "samepage/protocols/sharePageWithNotebook";
 import atJsonParser from "samepage/utils/atJsonParser";
 // @ts-ignore figure this out later - it compiles at least
 import leafGrammar from "../utils/leafGrammar.ne";
 import type SamePagePlugin from "../main";
-import { EventRef, MarkdownView, TFile, WorkspaceLeaf } from "obsidian";
+import { EventRef, MarkdownView, TFile } from "obsidian";
 import Automerge from "automerge";
 import apps from "samepage/internal/apps";
+import renderAtJson from "samepage/utils/renderAtJson";
 
 const applyState = async (
   notebookPageId: string,
   state: Schema,
   plugin: SamePagePlugin
 ) => {
-  const expectedText = state.annotations
-    .map((annotation, index) => ({ annotation, index }))
-    .sort((a, b) => {
-      const asize = a.annotation.end - a.annotation.start;
-      const bsize = b.annotation.end - b.annotation.start;
-      return bsize - asize || a.index - b.index;
-    })
-    .map(({ annotation }) => annotation)
-    .reduce((p, c, index, all) => {
-      const appliedAnnotation =
-        c.type === "bold"
-          ? {
-              prefix: "**",
-              suffix: `**`,
-            }
-          : c.type === "italics"
-          ? {
-              prefix: "_",
-              suffix: `_`,
-            }
-          : c.type === "strikethrough"
-          ? {
-              prefix: "~~",
-              suffix: `~~`,
-            }
-          : c.type === "link"
-          ? {
-              prefix: "[",
-              suffix: `](${c.attributes.href})`,
-            }
-          : c.type === "block"
-          ? { suffix: "\n", prefix: "".padStart(c.attributes.level - 1, "\t") }
-          : { prefix: "", suffix: "" };
-      const annotatedContent = p.slice(c.start, c.end);
-      const isEmptyAnnotation = annotatedContent === String.fromCharCode(0);
-      all.slice(index + 1).forEach((a) => {
-        a.start +=
-          (a.start >= c.start ? appliedAnnotation.prefix.length : 0) +
-          (a.start >= c.end ? appliedAnnotation.suffix.length : 0) +
-          (isEmptyAnnotation && a.start >= c.end ? -1 : 0);
-        a.end +=
-          (a.end >= c.start ? appliedAnnotation.prefix.length : 0) +
-          (a.end > c.end ? appliedAnnotation.suffix.length : 0) +
-          (isEmptyAnnotation && a.end > c.end ? -1 : 0);
-      });
-      return `${p.slice(0, c.start)}${appliedAnnotation.prefix}${
-        isEmptyAnnotation ? "" : annotatedContent
-      }${appliedAnnotation.suffix}${p.slice(c.end)}`;
-    }, state.content.toString());
+  const blocks = state.annotations.filter((b) => b.type === "block");
+  const notBlocks = state.annotations.filter((b) => b.type !== "block");
+  const expectedText = renderAtJson({
+    state: {
+      annotations: notBlocks.concat(blocks),
+      content: state.content.toString(),
+    },
+    applyAnnotation: {
+      bold: {
+        prefix: "**",
+        suffix: `**`,
+      },
+      italics: {
+        prefix: "_",
+        suffix: `_`,
+      },
+      strikethrough: {
+        prefix: "~~",
+        suffix: `~~`,
+      },
+      link: ({ href }) => ({
+        prefix: "[",
+        suffix: `](${href})`,
+      }),
+      image: ({ src }) => ({
+        prefix: "![",
+        suffix: `](${src})`,
+      }),
+      block: ({ level }) => ({
+        suffix: "\n",
+        prefix: "".padStart(level - 1, "\t"),
+      }),
+    },
+  });
   const abstractFile = plugin.app.vault.getAbstractFileByPath(
     `${notebookPageId}.md`
   );
@@ -195,13 +181,30 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       refreshRef = undefined;
     }
   };
+  const refreshState = (notebookPageId: string) => {
+    refreshRef = plugin.app.vault.on("modify", async () => {
+      clearRefreshRef();
+      const doc = await calculateState(notebookPageId, plugin);
+      updatePage({
+        notebookPageId,
+        label: `Refresh`,
+        callback: (oldDoc) => {
+          oldDoc.content.deleteAt?.(0, oldDoc.content.length);
+          oldDoc.content.insertAt?.(0, ...new Automerge.Text(doc.content));
+          if (!oldDoc.annotations) oldDoc.annotations = [];
+          oldDoc.annotations.splice(0, oldDoc.annotations.length);
+          doc.annotations.forEach((a) => oldDoc.annotations.push(a));
+        },
+      });
+    });
+  };
   const previousSelection = {
     selectionStart: 0,
     selectionEnd: 0,
     blockStart: 0,
     blockEnd: 0,
   };
-  const bodyListener = async (e: KeyboardEvent) => {
+  const bodyKeyDownListener = async (e: KeyboardEvent) => {
     const el = e.target as HTMLElement;
     const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
     if (!view) {
@@ -255,24 +258,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
                 : Math.abs(selectionStart - selectionEnd),
           });
         } else {
-          refreshRef = plugin.app.vault.on("modify", async () => {
-            clearRefreshRef();
-            const doc = await calculateState(notebookPageId, plugin);
-            updatePage({
-              notebookPageId,
-              label: `Refresh`,
-              callback: (oldDoc) => {
-                oldDoc.content.deleteAt?.(0, oldDoc.content.length);
-                oldDoc.content.insertAt?.(
-                  0,
-                  ...new Automerge.Text(doc.content)
-                );
-                if (!oldDoc.annotations) oldDoc.annotations = [];
-                oldDoc.annotations.splice(0, oldDoc.annotations.length);
-                doc.annotations.forEach((a) => oldDoc.annotations.push(a));
-              },
-            });
-          });
+          refreshState(notebookPageId);
         }
       }
     }
@@ -284,7 +270,21 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       previousSelection.blockStart = sel.head.line;
     }
   };
-  plugin.registerDomEvent(document.body, "keydown", bodyListener);
+  plugin.registerDomEvent(document.body, "keydown", bodyKeyDownListener);
+  const bodyPasteListener = (e: ClipboardEvent) => {
+    const el = e.target as HTMLElement;
+    const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) {
+      // no-op
+    } else if (el.tagName === "DIV" && el.classList.contains("cm-content")) {
+      const notebookPageId = plugin.app.workspace.getActiveFile()?.basename;
+      if (notebookPageId && isShared(notebookPageId)) {
+        clearRefreshRef();
+        refreshState(notebookPageId);
+      }
+    }
+  };
+  plugin.registerDomEvent(document.body, "paste", bodyPasteListener);
   return () => {
     clearRefreshRef();
     unload();

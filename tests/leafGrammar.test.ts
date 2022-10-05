@@ -1,4 +1,4 @@
-// TODO make this test friendly
+// TODO make this test friendly - https://github.com/microsoft/playwright/issues/17852
 import leafGrammar from "../src/utils/leafGrammar";
 import type { InitialSchema } from "samepage/types";
 import atJsonParser from "samepage/utils/atJsonParser";
@@ -34,7 +34,7 @@ Here's some **bold** an *italics* a ~~strike~~ a ^^highlight^^. No highlighting!
 Some regular text to end.`,
     {
       content:
-        "Some text to startText after newline {{no component support}} wordA block quote - handle laterText after blockquoteHere's some bold an italics a strike a ^^highlight^^. No highlighting!- First bullet- Second bulletSome regular text to end.",
+        `Some text to start${String.fromCharCode(0)}${String.fromCharCode(0)}${String.fromCharCode(0)}Text after newline {{no component support}} word${String.fromCharCode(0)}A block quote - handle later${String.fromCharCode(0)}Text after blockquote${String.fromCharCode(0)}Here's some bold an italics a strike a ^^highlight^^. No highlighting!- First bullet- Second bulletSome regular text to end.`,
       annotations: [
         {
           type: "block",
@@ -47,7 +47,7 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 18,
+          end: 19,
           start: 18,
           type: "block",
         },
@@ -56,8 +56,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 18,
-          start: 18,
+          end: 20,
+          start: 19,
           type: "block",
         },
         {
@@ -65,8 +65,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 18,
-          start: 18,
+          end: 21,
+          start: 20,
           type: "block",
         },
         {
@@ -74,8 +74,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 66,
-          start: 18,
+          end: 69,
+          start: 21,
           type: "block",
         },
         {
@@ -83,8 +83,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 66,
-          start: 66,
+          end: 70,
+          start: 69,
           type: "block",
         },
         {
@@ -92,8 +92,8 @@ Some regular text to end.`,
             level: 2,
             viewType: "document",
           },
-          end: 94,
-          start: 66,
+          end: 98,
+          start: 70,
           type: "block",
         },
         {
@@ -101,8 +101,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 94,
-          start: 94,
+          end: 99,
+          start: 98,
           type: "block",
         },
         {
@@ -110,8 +110,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 115,
-          start: 94,
+          end: 120,
+          start: 99,
           type: "block",
         },
         {
@@ -119,8 +119,8 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 115,
-          start: 115,
+          end: 121,
+          start: 120,
           type: "block",
         },
         {
@@ -128,29 +128,20 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 185,
-          start: 115,
+          end: 191,
+          start: 121,
           type: "block",
         },
-        { type: "bold", start: 127, end: 131 },
-        { type: "italics", start: 135, end: 142 },
-        { type: "strikethrough", start: 145, end: 151 },
+        { type: "bold", start: 133, end: 137 },
+        { type: "italics", start: 141, end: 148 },
+        { type: "strikethrough", start: 151, end: 157 },
         {
           attributes: {
             level: 1,
             viewType: "document",
           },
-          end: 199,
-          start: 185,
-          type: "block",
-        },
-        {
-          attributes: {
-            level: 1,
-            viewType: "document",
-          },
-          end: 214,
-          start: 199,
+          end: 205,
+          start: 191,
           type: "block",
         },
         {
@@ -158,8 +149,17 @@ Some regular text to end.`,
             level: 1,
             viewType: "document",
           },
-          end: 239,
-          start: 214,
+          end: 220,
+          start: 205,
+          type: "block",
+        },
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 245,
+          start: 220,
           type: "block",
         },
       ],
@@ -170,7 +170,7 @@ Some regular text to end.`,
 test(
   "Extra new lines at the end",
   runTest("Extra new line\n\n", {
-    content: "Extra new line",
+    content: `Extra new line${String.fromCharCode(0)}`,
     annotations: [
       {
         type: "block",
@@ -181,7 +181,7 @@ test(
       {
         type: "block",
         start: 14,
-        end: 14,
+        end: 15,
         attributes: { level: 1, viewType: "document" },
       },
     ],
@@ -210,6 +210,82 @@ test(
         start: 26,
         end: 38,
         attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
+);
+
+test(
+  "Aliasless link",
+  runTest("A [](https://samepage.network) text", {
+    content: "A [](https://samepage.network) text",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 35,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
+);
+
+test(
+  "Just a link",
+  runTest("Just a link: https://samepage.network", {
+    content: "Just a link: https://samepage.network",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 37,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
+);
+
+test(
+  "Image with alias",
+  runTest("![alias](https://samepage.network/images/logo.png)", {
+    content: "alias",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 5,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "image",
+        start: 0,
+        end: 5,
+        attributes: {
+          src: "https://samepage.network/images/logo.png",
+        },
+      },
+    ],
+  })
+);
+
+test(
+  "Image without alias",
+  runTest("![](https://samepage.network/images/logo.png)", {
+    content: String.fromCharCode(0),
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 1,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "image",
+        start: 0,
+        end: 1,
+        attributes: {
+          src: "https://samepage.network/images/logo.png",
+        },
       },
     ],
   })
