@@ -31,26 +31,31 @@ export const createBlockTokens: Processor<InitialSchema> = (data) => {
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
     .filter((d): d is InitialSchemaWithTabs => !!d);
   return tokens.reduce(
-    (total, current, index) => ({
-      content: `${total.content}${current.content}`,
-      annotations: total.annotations
-        .concat({
-          type: "block",
-          start: total.content.length,
-          end: total.content.length + current.content.length,
-          attributes: {
-            level: current.tabs + 1,
-            viewType: "document",
-          },
-        })
-        .concat(
-          current.annotations.map((a) => ({
-            ...a,
-            start: a.start + total.content.length,
-            end: a.end + total.content.length,
-          }))
-        ),
-    }),
+    (total, current) => {
+      const content = current.content.length
+        ? current.content
+        : String.fromCharCode(0);
+      return {
+        content: `${total.content}${content}`,
+        annotations: total.annotations
+          .concat({
+            type: "block",
+            start: total.content.length,
+            end: total.content.length + content.length,
+            attributes: {
+              level: current.tabs + 1,
+              viewType: "document",
+            },
+          })
+          .concat(
+            current.annotations.map((a) => ({
+              ...a,
+              start: a.start + total.content.length,
+              end: a.end + total.content.length,
+            }))
+          ),
+      };
+    },
     {
       content: "",
       annotations: [],

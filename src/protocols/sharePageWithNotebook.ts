@@ -13,44 +13,55 @@ const applyState = async (
   state: Schema,
   plugin: SamePagePlugin
 ) => {
-  const expectedText = state.annotations.reduce((p, c, index, all) => {
-    const appliedAnnotation =
-      c.type === "bold"
-        ? {
-            prefix: "**",
-            suffix: `**`,
-          }
-        : c.type === "italics"
-        ? {
-            prefix: "_",
-            suffix: `_`,
-          }
-        : c.type === "strikethrough"
-        ? {
-            prefix: "~~",
-            suffix: `~~`,
-          }
-        : c.type === "link"
-        ? {
-            prefix: "[",
-            suffix: `](${c.attributes.href})`,
-          }
-        : c.type === "block"
-        ? { suffix: "\n", prefix: "".padStart(c.attributes.level - 1, "\t") }
-        : { prefix: "", suffix: "" };
-    all.slice(index + 1).forEach((a) => {
-      a.start +=
-        (a.start >= c.start ? appliedAnnotation.prefix.length : 0) +
-        (a.start >= c.end ? appliedAnnotation.suffix.length : 0);
-      a.end +=
-        (a.end >= c.start ? appliedAnnotation.prefix.length : 0) +
-        (a.end > c.end ? appliedAnnotation.suffix.length : 0);
-    });
-    return `${p.slice(0, c.start)}${appliedAnnotation.prefix}${p.slice(
-      c.start,
-      c.end
-    )}${appliedAnnotation.suffix}${p.slice(c.end)}`;
-  }, state.content.toString());
+  const expectedText = state.annotations
+    .map((annotation, index) => ({ annotation, index }))
+    .sort((a, b) => {
+      const asize = a.annotation.end - a.annotation.start;
+      const bsize = b.annotation.end - b.annotation.start;
+      return bsize - asize || a.index - b.index;
+    })
+    .map(({ annotation }) => annotation)
+    .reduce((p, c, index, all) => {
+      const appliedAnnotation =
+        c.type === "bold"
+          ? {
+              prefix: "**",
+              suffix: `**`,
+            }
+          : c.type === "italics"
+          ? {
+              prefix: "_",
+              suffix: `_`,
+            }
+          : c.type === "strikethrough"
+          ? {
+              prefix: "~~",
+              suffix: `~~`,
+            }
+          : c.type === "link"
+          ? {
+              prefix: "[",
+              suffix: `](${c.attributes.href})`,
+            }
+          : c.type === "block"
+          ? { suffix: "\n", prefix: "".padStart(c.attributes.level - 1, "\t") }
+          : { prefix: "", suffix: "" };
+      const annotatedContent = p.slice(c.start, c.end);
+      const isEmptyAnnotation = annotatedContent === String.fromCharCode(0);
+      all.slice(index + 1).forEach((a) => {
+        a.start +=
+          (a.start >= c.start ? appliedAnnotation.prefix.length : 0) +
+          (a.start >= c.end ? appliedAnnotation.suffix.length : 0) +
+          (isEmptyAnnotation && a.start >= c.end ? -1 : 0);
+        a.end +=
+          (a.end >= c.start ? appliedAnnotation.prefix.length : 0) +
+          (a.end > c.end ? appliedAnnotation.suffix.length : 0) +
+          (isEmptyAnnotation && a.end > c.end ? -1 : 0);
+      });
+      return `${p.slice(0, c.start)}${appliedAnnotation.prefix}${
+        isEmptyAnnotation ? "" : annotatedContent
+      }${appliedAnnotation.suffix}${p.slice(c.end)}`;
+    }, state.content.toString());
   const abstractFile = plugin.app.vault.getAbstractFileByPath(
     `${notebookPageId}.md`
   );
