@@ -14,11 +14,9 @@ const applyState = async (
   state: Schema,
   plugin: SamePagePlugin
 ) => {
-  const blocks = state.annotations.filter((b) => b.type === "block");
-  const notBlocks = state.annotations.filter((b) => b.type !== "block");
   const expectedText = renderAtJson({
     state: {
-      annotations: notBlocks.concat(blocks),
+      annotations: state.annotations,
       content: state.content.toString(),
     },
     applyAnnotation: {
@@ -42,9 +40,11 @@ const applyState = async (
         prefix: "![",
         suffix: `](${src})`,
       }),
-      block: ({ level }) => ({
-        suffix: "\n",
-        prefix: "".padStart(level - 1, "\t"),
+      block: ({ level, viewType }) => ({
+        suffix: viewType === "document" ? "\n" : "",
+        prefix: `${"".padStart(level - 1, "\t")}${
+          viewType === "bullet" ? "- " : viewType === "numbered" ? "1. " : ""
+        }`,
       }),
     },
   });

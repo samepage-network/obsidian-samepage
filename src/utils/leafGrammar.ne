@@ -6,13 +6,13 @@
 import {
    createBoldToken,
    createItalicsToken,
-   createLinkToken,
    createStrikethroughToken,
    createTextToken,
    createImageToken,
-   disambiguateTokens,
 } from "samepage/utils/atJsonTokens";
 import lexer, {
+   disambiguateTokens,
+   createLinkToken,
    createBlockTokens,
    createEmpty,
 } from "./leafLexer";
@@ -20,9 +20,11 @@ import lexer, {
 
 @lexer lexer
 
-main -> ( %tab:* tokens %newLine {% ([a,b]) =>  ({...b, tabs: a.length})%} | %tab:* %newLine {% createEmpty %}):* (%tab:* tokens {% ([a,b]) =>  ({...b, tabs: a.length})%}):? {% createBlockTokens %}
+main -> (%tab:* tokens {% ([a,b]) => ({...b, tabs: a.length, viewType: "document"})%} | %tab:* %bullet tokens {% ([a,_,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} | %tab:* %numbered tokens {% ([a,_,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}) (%newLine %newLine %tab:* tokens {% ([_, __, a,b]) =>  ({...b, tabs: a.length, viewType: "document"})%} | %newLine %tab:* %bullet tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} | %newLine %tab:* %numbered tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}):* {% createBlockTokens %}
 
-tokens -> token:+ {% disambiguateTokens %}
+# document -> %tab:* tokens {% ([a,b]) =>  ({...b, tabs: a.length, viewType: "document"})%}
+
+tokens -> token:+ {% disambiguateTokens %} | null {% createEmpty %}
 
 token -> %strike tokens %strike {% createStrikethroughToken %}
    | %boldUnder tokens %boldUnder {% createBoldToken %}
@@ -30,7 +32,7 @@ token -> %strike tokens %strike {% createStrikethroughToken %}
    | %under tokens %under {% createItalicsToken %}
    | %star tokens %star {% createItalicsToken %}
    | %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createLinkToken %}
-   | %exclamationMark %leftBracket (tokens {% id %} | null {% id %}) %rightBracket %leftParen %url %rightParen {% createImageToken %}
+   | %exclamationMark %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createImageToken %}
    | %text {% createTextToken %}
    | %star  {% createTextToken %}
    | %carot  {% createTextToken %}
@@ -42,3 +44,5 @@ token -> %strike tokens %strike {% createStrikethroughToken %}
    | %rightBracket {% createTextToken %}
    | %exclamationMark {% createTextToken %}
    | %leftBracket %rightBracket %leftParen %url %rightParen {% createTextToken %}
+   | %tab {% createTextToken %}
+   | %newLine {% createTextToken %}
