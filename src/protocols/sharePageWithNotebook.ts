@@ -89,17 +89,6 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
     calculateState: (id) => calculateState(id, plugin),
     getCurrentNotebookPageId: async () =>
       plugin.app.workspace.getActiveFile()?.basename || "",
-    loadState: async (notebookPageId) => {
-      return new Uint8Array(plugin.data.pages[notebookPageId]);
-    },
-    saveState: (notebookPageId, state) => {
-      plugin.data.pages[notebookPageId] = Array.from(state);
-      return plugin.save();
-    },
-    removeState: (notebookPageId) => {
-      delete plugin.data.pages[notebookPageId];
-      return plugin.save();
-    },
     overlayProps: {
       viewSharedPageProps: {
         onLinkClick: (title, e) => {

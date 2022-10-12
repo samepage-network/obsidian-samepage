@@ -59,26 +59,22 @@ class SamePageSettingTab extends PluginSettingTab {
 type PluginData = {
   settings: { [k in DefaultSetting["id"]]?: boolean };
   notifications: Record<string, Notifications[number]>;
-  pages: Record<string, number[]>;
 };
 
 type RawPluginData = {
   settings?: { [k in DefaultSetting["id"]]?: boolean };
   notifications?: Record<string, Notifications[number]>;
-  pages?: Record<string, number[]>;
 } | null;
 
 class SamePagePlugin extends Plugin {
   data: PluginData = {
     settings: {},
     notifications: {},
-    pages: {},
   };
   async onload() {
     const {
       settings = {},
       notifications = {},
-      pages = {},
     } = ((await this.loadData()) as RawPluginData) || {};
     this.data = {
       settings: {
@@ -86,7 +82,6 @@ class SamePagePlugin extends Plugin {
         ...settings,
       },
       notifications,
-      pages,
     };
 
     this.addSettingTab(new SamePageSettingTab(this.app, this));
