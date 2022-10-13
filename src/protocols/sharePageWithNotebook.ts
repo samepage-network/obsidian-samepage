@@ -116,14 +116,13 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
                 })
               )
               .then(() => {
-                const active = plugin.app.workspace.getActiveFile();
-                if (active) {
-                  active.vault.append(
-                    active,
-                    `\nAccepted page [[${title}]] from ${
-                      apps[Number(app)].name
-                    } / ${workspace}`
-                  );
+                const active =
+                  plugin.app.workspace.getActiveViewOfType(MarkdownView);
+                const newFile = plugin.app.vault.getAbstractFileByPath(
+                  `${title}.md`
+                );
+                if (newFile instanceof TFile && active) {
+                  active.leaf.openFile(newFile);
                 }
               }),
           reject: async ({ title }) =>
