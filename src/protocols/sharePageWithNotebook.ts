@@ -103,7 +103,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       },
       notificationContainerProps: {
         actions: {
-          accept: ({ app, workspace, pageUuid, title }) =>
+          accept: ({ pageUuid, title }) =>
             plugin.app.vault
               .create(`${title}.md`, "")
               .then((file) =>
@@ -144,17 +144,20 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
         },
       },
       sharedPageStatusProps: {
-        selector: "div.view-header-title#text",
-        getPath: (el) =>
-          (el.parentElement &&
-            el.parentElement.closest<HTMLElement>(
-              ".view-header-title-container"
-            )) ||
-          null,
+        selector: ".workspace-leaf div.inline-title",
+        getPath: (el) => {
+          const workleafRoot =
+            el.parentElement &&
+            el.parentElement.closest<HTMLElement>(".workspace-leaf");
+          if (workleafRoot) {
+            return workleafRoot.querySelector(".cm-contentContainer");
+          }
+          return null;
+        },
         getHtmlElement: async (title) =>
           Array.from(
             document.querySelectorAll<HTMLHeadingElement>(
-              "div.view-header-title"
+              ".workspace-leaf div.inline-title"
             )
           ).find((h) => h.textContent === title),
         getNotebookPageId: async (el) => el.nodeValue,

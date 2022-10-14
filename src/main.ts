@@ -1,16 +1,12 @@
-import {
-  App,
-  Notice,
-  Plugin,
-  PluginSettingTab,
-  Setting,
-} from "obsidian";
+import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 import defaultSettings, {
   DefaultSetting,
 } from "samepage/utils/defaultSettings";
 import setupSamePageClient from "samepage/protocols/setupSamePageClient";
 import type { NotificationContainerProps } from "samepage/components/NotificationContainer";
-import setupSharePageWithNotebook, { granularChanges } from "./protocols/sharePageWithNotebook";
+import setupSharePageWithNotebook, {
+  granularChanges,
+} from "./protocols/sharePageWithNotebook";
 import { onAppEvent } from "samepage/internal/registerAppEventListener";
 import renderOverlay from "./utils/renderOverlay";
 import Loading from "./components/Loading";
@@ -72,10 +68,8 @@ class SamePagePlugin extends Plugin {
     notifications: {},
   };
   async onload() {
-    const {
-      settings = {},
-      notifications = {},
-    } = ((await this.loadData()) as RawPluginData) || {};
+    const { settings = {}, notifications = {} } =
+      ((await this.loadData()) as RawPluginData) || {};
     this.data = {
       settings: {
         ...Object.fromEntries(defaultSettings.map((s) => [s.id, s.default])),
@@ -114,6 +108,7 @@ class SamePagePlugin extends Plugin {
       },
       app: "Obsidian",
       workspace: this.app.vault.getName(),
+      renderOverlay,
     });
     onAppEvent(
       "log",
@@ -122,7 +117,9 @@ class SamePagePlugin extends Plugin {
     let removeLoadingCallback: (() => void) | undefined;
     onAppEvent("connection", (evt) => {
       if (evt.status === "PENDING")
-        removeLoadingCallback = renderOverlay({ Overlay: Loading });
+        removeLoadingCallback = renderOverlay({
+          Overlay: Loading,
+        }) as () => void;
       else removeLoadingCallback?.();
     });
 
