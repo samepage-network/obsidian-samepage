@@ -38,27 +38,48 @@ class SamePageSettingTab extends PluginSettingTab {
         .setName(s.name)
         .setDesc(s.description);
       if (s.type === "boolean") {
-        setting.addToggle((toggle) =>
-          toggle.setValue(s.default).onChange((value) => {
-            this.plugin.data.settings[s.id] = value;
-            if (s.id === "granular-changes") {
-              granularChanges.enabled = value;
-            }
-            this.plugin.save();
-          })
-        );
+        setting.addToggle((toggle) => {
+          const saved = this.plugin.data.settings[s.id];
+          toggle
+            .setValue(typeof saved !== "boolean" ? s.default : saved)
+            .onChange((value) => {
+              this.plugin.data.settings[s.id] = value;
+              if (s.id === "granular-changes") {
+                granularChanges.enabled = value;
+              }
+              this.plugin.save();
+            });
+        });
+      } else if (s.type === "string") {
+        setting.addText((text) => {
+          const saved = this.plugin.data.settings[s.id];
+          text
+            .setValue(typeof saved !== "string" ? s.default : saved)
+            .onChange((value) => {
+              this.plugin.data.settings[s.id] = value;
+              this.plugin.save();
+            });
+        });
       }
     });
   }
 }
 
+type Settings = {
+  [k in DefaultSetting as k["id"]]?: k["type"] extends "boolean"
+    ? boolean
+    : k["type"] extends "string"
+    ? string
+    : never;
+};
+
 type PluginData = {
-  settings: { [k in DefaultSetting["id"]]?: boolean };
+  settings: Settings;
   notifications: Record<string, Notifications[number]>;
 };
 
 type RawPluginData = {
-  settings?: { [k in DefaultSetting["id"]]?: boolean };
+  settings?: Settings;
   notifications?: Record<string, Notifications[number]>;
 } | null;
 
@@ -83,7 +104,7 @@ class SamePagePlugin extends Plugin {
     const self = this;
     const checkCallback: Record<string, boolean> = {};
     const { unload: unloadSamePageClient } = await setupSamePageClient({
-      isAutoConnect: this.data.settings["auto-connect"],
+      getSetting: (s) => this.data.settings[s] as string,
       addCommand: ({ label, callback }) => {
         if (label in checkCallback) checkCallback[label] = true;
         else {
