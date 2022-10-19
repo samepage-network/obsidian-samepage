@@ -16,7 +16,7 @@ const renderOverlay: RenderOverlay = ({
   const parent = document.createElement("div");
   parent.id = id;
   const pathElement =
-    typeof path === undefined
+    typeof path === "undefined"
       ? document.body.lastElementChild
       : typeof path === "string"
       ? document.querySelector(path)
