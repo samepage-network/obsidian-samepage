@@ -15,6 +15,10 @@ type Notifications = Awaited<
   ReturnType<Required<NotificationContainerProps>["api"]["getNotifications"]>
 >;
 
+const defaultTypeById = Object.fromEntries(
+  defaultSettings.map((s) => [s.id, s.type])
+);
+
 const IGNORED_LOGS = new Set([
   "list-pages-success",
   "load-remote-message",
@@ -99,12 +103,22 @@ class SamePagePlugin extends Plugin {
       notifications,
     };
 
-    this.addSettingTab(new SamePageSettingTab(this.app, this));
+    const settingTab = new SamePageSettingTab(this.app, this);
+    this.addSettingTab(settingTab);
 
     const self = this;
     const checkCallback: Record<string, boolean> = {};
-    const { unload: unloadSamePageClient } = await setupSamePageClient({
+    const { unload: unloadSamePageClient } = setupSamePageClient({
       getSetting: (s) => this.data.settings[s] as string,
+      setSetting: (s, v) => {
+        // TODO - fix this typing
+        if (defaultTypeById[s] === "string")
+          this.data.settings[s as "uuid" | "token"] = v;
+        if (defaultTypeById[s] === "boolean")
+          this.data.settings[s as "granular-changes" | "auto-connect"] =
+            v === "true";
+        this.save();
+      },
       addCommand: ({ label, callback }) => {
         if (label in checkCallback) checkCallback[label] = true;
         else {
