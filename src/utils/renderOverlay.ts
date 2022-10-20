@@ -14,7 +14,7 @@ const renderOverlay: RenderOverlay = ({
   path,
 } = {}) => {
   const parent = document.createElement("div");
-  parent.id = id;
+  parent.id = id.replace(/^\d*/, "");
   const pathElement =
     typeof path === "undefined"
       ? document.body.lastElementChild
@@ -25,7 +25,7 @@ const renderOverlay: RenderOverlay = ({
   if (
     pathElement &&
     pathElement.parentElement &&
-    !pathElement.parentElement.querySelector(`#${id}`)
+    !pathElement.parentElement.querySelector(`#${parent.id}`)
   ) {
     pathElement.parentElement.insertBefore(parent, pathElement);
     const root = createRoot(parent);
