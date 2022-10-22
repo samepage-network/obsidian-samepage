@@ -1,6 +1,6 @@
 import { compileLexer, DEFAULT_TOKENS } from "samepage/utils/atJsonTokens";
 import nearley from "nearley";
-import { Annotation, InitialSchema } from "samepage/types";
+import { Annotation, InitialSchema } from "samepage/internal/types";
 import { disambiguateTokens as defaultDismabuagteTokens } from "samepage/utils/atJsonTokens";
 
 const lexer = compileLexer(

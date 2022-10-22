@@ -1,4 +1,4 @@
-import type { Schema } from "samepage/types";
+import type { Schema } from "samepage/internal/types";
 import loadSharePageWithNotebook from "samepage/protocols/sharePageWithNotebook";
 import atJsonParser from "samepage/utils/atJsonParser";
 // @ts-ignore figure this out later - it compiles at least

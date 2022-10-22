@@ -1,6 +1,6 @@
 // TODO make this test friendly - https://github.com/microsoft/playwright/issues/17852
 import leafGrammar from "../src/utils/leafGrammar";
-import type { InitialSchema } from "samepage/types";
+import type { InitialSchema } from "samepage/internal/types";
 import atJsonParser from "samepage/utils/atJsonParser";
 import { test, expect } from "@playwright/test";
 
