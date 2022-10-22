@@ -6,7 +6,7 @@ import leafGrammar from "../utils/leafGrammar.ne";
 import type SamePagePlugin from "../main";
 import { EventRef, MarkdownView, TFile } from "obsidian";
 import Automerge from "automerge";
-import apps from "samepage/internal/apps";
+import { v4 } from "uuid";
 import renderAtJson from "samepage/utils/renderAtJson";
 
 const applyState = async (
@@ -103,12 +103,11 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       },
       notificationContainerProps: {
         actions: {
-          accept: ({ pageUuid, title }) =>
+          accept: ({ title }) =>
             plugin.app.vault
               .create(`${title}.md`, "")
               .then((file) =>
                 joinPage({
-                  pageUuid,
                   notebookPageId: file.basename,
                 }).catch((e) => {
                   plugin.app.vault.delete(file);
@@ -150,7 +149,9 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
             el.parentElement &&
             el.parentElement.closest<HTMLElement>(".workspace-leaf");
           if (workleafRoot) {
-            return workleafRoot.querySelector(".cm-contentContainer");
+            const sel = v4();
+            workleafRoot.setAttribute("data-samepage-shared", sel);
+            return `div[data-samepage-shared="${sel}"] .cm-contentContainer`;
           }
           return null;
         },

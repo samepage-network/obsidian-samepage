@@ -9,7 +9,6 @@ import setupSharePageWithNotebook, {
 } from "./protocols/sharePageWithNotebook";
 import { onAppEvent } from "samepage/internal/registerAppEventListener";
 import renderOverlay from "./utils/renderOverlay";
-import Loading from "./components/Loading";
 
 type Notifications = Awaited<
   ReturnType<Required<NotificationContainerProps>["api"]["getNotifications"]>
@@ -92,7 +91,8 @@ class SamePagePlugin extends Plugin {
     settings: {},
     notifications: {},
   };
-  async onload() {
+
+  async setupUserSettings() {
     const { settings = {}, notifications = {} } =
       ((await this.loadData()) as RawPluginData) || {};
     this.data = {
@@ -105,10 +105,12 @@ class SamePagePlugin extends Plugin {
 
     const settingTab = new SamePageSettingTab(this.app, this);
     this.addSettingTab(settingTab);
+  }
 
+  setupClient() {
     const self = this;
     const checkCallback: Record<string, boolean> = {};
-    const { unload: unloadSamePageClient } = setupSamePageClient({
+    const { unload } = setupSamePageClient({
       getSetting: (s) => this.data.settings[s] as string,
       setSetting: (s, v) => {
         // TODO - fix this typing
@@ -144,24 +146,21 @@ class SamePagePlugin extends Plugin {
       app: "Obsidian",
       workspace: this.app.vault.getName(),
       renderOverlay,
+      onAppLog: (evt) => evt.intent !== "debug" && new Notice(evt.content),
     });
-    onAppEvent(
-      "log",
-      (evt) => !IGNORED_LOGS.has(evt.id) && new Notice(evt.content)
-    );
-    let removeLoadingCallback: (() => void) | undefined;
-    onAppEvent("connection", (evt) => {
-      if (evt.status === "PENDING")
-        removeLoadingCallback = renderOverlay({
-          Overlay: Loading,
-        }) as () => void;
-      else removeLoadingCallback?.();
-    });
+    return unload;
+  }
 
-    const unloadSharePageWithNotebook = setupSharePageWithNotebook(this);
+  setupProtocols() {
+    return setupSharePageWithNotebook(this);
+  }
 
+  async onload() {
+    await this.setupUserSettings();
+    const unloadSamePageClient = this.setupClient();
+    const unloadProtocols = this.setupProtocols();
     this.onunload = () => {
-      unloadSharePageWithNotebook();
+      unloadProtocols();
       unloadSamePageClient();
     };
   }
