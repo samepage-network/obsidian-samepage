@@ -129,18 +129,6 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
               notebookPageId: title,
             }),
         },
-        api: {
-          addNotification: (n) => {
-            plugin.data.notifications[n.uuid] = n;
-            return plugin.save();
-          },
-          deleteNotification: (uuid) => {
-            delete plugin.data.notifications[uuid];
-            return plugin.save();
-          },
-          getNotifications: async () =>
-            Object.values(plugin.data.notifications),
-        },
       },
       sharedPageStatusProps: {
         selector: ".workspace-leaf div.inline-title",

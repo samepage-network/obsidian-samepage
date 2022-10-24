@@ -3,16 +3,10 @@ import defaultSettings, {
   DefaultSetting,
 } from "samepage/utils/defaultSettings";
 import setupSamePageClient from "samepage/protocols/setupSamePageClient";
-import type { NotificationContainerProps } from "samepage/components/NotificationContainer";
 import setupSharePageWithNotebook, {
   granularChanges,
 } from "./protocols/sharePageWithNotebook";
-import { onAppEvent } from "samepage/internal/registerAppEventListener";
 import renderOverlay from "./utils/renderOverlay";
-
-type Notifications = Awaited<
-  ReturnType<Required<NotificationContainerProps>["api"]["getNotifications"]>
->;
 
 const defaultTypeById = Object.fromEntries(
   defaultSettings.map((s) => [s.id, s.type])
@@ -78,29 +72,24 @@ type Settings = {
 
 type PluginData = {
   settings: Settings;
-  notifications: Record<string, Notifications[number]>;
 };
 
 type RawPluginData = {
   settings?: Settings;
-  notifications?: Record<string, Notifications[number]>;
 } | null;
 
 class SamePagePlugin extends Plugin {
   data: PluginData = {
     settings: {},
-    notifications: {},
   };
 
   async setupUserSettings() {
-    const { settings = {}, notifications = {} } =
-      ((await this.loadData()) as RawPluginData) || {};
+    const { settings = {} } = ((await this.loadData()) as RawPluginData) || {};
     this.data = {
       settings: {
         ...Object.fromEntries(defaultSettings.map((s) => [s.id, s.default])),
         ...settings,
       },
-      notifications,
     };
 
     const settingTab = new SamePageSettingTab(this.app, this);
