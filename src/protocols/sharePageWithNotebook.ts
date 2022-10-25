@@ -129,6 +129,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
               notebookPageId: title,
             }),
         },
+        path: `.workspace-tabs.mod-top-right-space .workspace-tab-header-container .workspace-tab-header-tab-list`,
       },
       sharedPageStatusProps: {
         selector: ".workspace-leaf div.inline-title",

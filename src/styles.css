@@ -19,7 +19,17 @@ span.samepage-shared-page-status {
 }
 .samepage-notification-container {
   color: black;
+  position: relative;
 }
 .samepage-shared-page-status img {
   margin: 0;
+}
+#samepage-notification-container {
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.samepage-notification-container > div {
+  margin-top: 60px;
 }
