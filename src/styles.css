@@ -17,10 +17,6 @@ span.samepage-shared-page-status {
 .samepage-notification-container h5 {
   margin: 8px 0;
 }
-.samepage-notification-container {
-  color: black;
-  position: relative;
-}
 .samepage-shared-page-status img {
   margin: 0;
 }
@@ -30,6 +26,11 @@ span.samepage-shared-page-status {
   flex-direction: column;
   justify-content: center;
 }
-.samepage-notification-container > div {
-  margin-top: 60px;
+.samepage-notification-container .border-b {
+  border-top-width: 0;
+  border-left-width: 0;
+  border-right-width: 0;
+}
+.samepage-notification-container {
+  height: 24px;
 }

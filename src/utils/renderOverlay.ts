@@ -15,33 +15,42 @@ const renderOverlay: RenderOverlay = ({
 } = {}) => {
   const parent = document.createElement("div");
   parent.id = id.replace(/^\d*/, "");
-  const pathElement =
-    typeof path === "undefined"
-      ? document.body.lastElementChild
-      : typeof path === "string"
-      ? document.querySelector(path)
-      : path;
   let onClose: () => void;
-  if (
-    pathElement &&
-    pathElement.parentElement &&
-    !pathElement.parentElement.querySelector(`#${parent.id}`)
-  ) {
-    pathElement.parentElement.insertBefore(parent, pathElement);
-    const root = createRoot(parent);
-    onClose = () => {
-      root.unmount();
-      parent.remove();
-    };
-    root.render(
-      //@ts-ignore what is happening here...
-      React.createElement(Overlay, {
-        ...props,
-        onClose,
-        isOpen: true,
-      })
-    );
+  const finishRendering = () => {
+    const pathElement =
+      typeof path === "undefined"
+        ? document.body.lastElementChild
+        : typeof path === "string"
+        ? document.querySelector(path)
+        : path;
+    if (
+      pathElement &&
+      pathElement.parentElement &&
+      !pathElement.parentElement.querySelector(`#${parent.id}`)
+    ) {
+      pathElement.parentElement.insertBefore(parent, pathElement);
+      const root = createRoot(parent);
+      onClose = () => {
+        root.unmount();
+        parent.remove();
+      };
+      root.render(
+        //@ts-ignore what is happening here...
+        React.createElement(Overlay, {
+          ...props,
+          onClose,
+          isOpen: true,
+        })
+      );
+    }
+  };
+  // TODO - need a better way to solve this race condition
+  if (parent.id === "samepage-notification-container") {
+    setTimeout(finishRendering, 1000);
+  } else {
+    finishRendering();
   }
+
   return () => {
     onClose?.();
   };
