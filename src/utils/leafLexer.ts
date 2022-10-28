@@ -2,10 +2,12 @@ import { compileLexer, DEFAULT_TOKENS } from "samepage/utils/atJsonTokens";
 import nearley from "nearley";
 import { Annotation, InitialSchema } from "samepage/internal/types";
 import { disambiguateTokens as defaultDismabuagteTokens } from "samepage/utils/atJsonTokens";
+import { getSetting } from "samepage/internal/registry";
 
 const lexer = compileLexer(
   {
     url: DEFAULT_TOKENS.url,
+    reference: /\[\[[^\]]+\]\]/,
     bullet: { match: /- / },
     numbered: { match: /\d+\. / },
     text: { match: /[^~_*[\]\n\t!()]+/, lineBreaks: true },
@@ -123,6 +125,34 @@ export const createLinkToken: Processor<InitialSchema> = (_data, _, reject) => {
         },
       } as Annotation,
     ].concat(annotations),
+  };
+};
+
+export const createReferenceToken: Processor<InitialSchema> = (_data) => {
+  const [token] = _data as [moo.Token];
+  const value = token.value.slice(2, -2);
+  const parsedNotebookUuid = value.match(
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}:/
+  )?.[0];
+  const notebookUuid = parsedNotebookUuid
+    ? parsedNotebookUuid.slice(0, -1)
+    : getSetting("uuid");
+  const notebookPageId = parsedNotebookUuid
+    ? value.slice(parsedNotebookUuid.length)
+    : value;
+  return {
+    content: String.fromCharCode(0),
+    annotations: [
+      {
+        type: "reference",
+        start: 0,
+        end: 1,
+        attributes: {
+          notebookPageId,
+          notebookUuid,
+        },
+      } as Annotation,
+    ],
   };
 };
 

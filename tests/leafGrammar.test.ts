@@ -3,6 +3,13 @@ import leafGrammar from "../src/utils/leafGrammar";
 import type { InitialSchema } from "samepage/internal/types";
 import atJsonParser from "samepage/utils/atJsonParser";
 import { test, expect } from "@playwright/test";
+import { v4 } from "uuid";
+
+const notebookUuid = v4();
+// @ts-ignore
+global.localStorage = {
+  getItem: () => JSON.stringify({ uuid: notebookUuid }),
+};
 
 const runTest = (md: string, expected: InitialSchema) => () => {
   const output = atJsonParser(leafGrammar, md);
@@ -288,3 +295,55 @@ test(
     ],
   })
 );
+
+test("A normal block reference", () => {
+  runTest("A block [[page title#^abcdef]] to content", {
+    content: `A block ${String.fromCharCode(0)} to content\n`,
+    annotations: [
+      {
+        start: 0,
+        end: 21,
+        type: "block",
+        attributes: {
+          viewType: "document",
+          level: 1,
+        },
+      },
+      {
+        start: 8,
+        end: 9,
+        type: "reference",
+        attributes: {
+          notebookPageId: "page title#^abcdef",
+          notebookUuid,
+        },
+      },
+    ],
+  })();
+});
+
+test("A cross app block reference", () => {
+  runTest("A [[abcd1234-abcd-1234-abcd-1234abcd1234:reference]] to content", {
+    content: `A ${String.fromCharCode(0)} to content\n`,
+    annotations: [
+      {
+        start: 0,
+        end: 15,
+        type: "block",
+        attributes: {
+          viewType: "document",
+          level: 1,
+        },
+      },
+      {
+        start: 2,
+        end: 3,
+        type: "reference",
+        attributes: {
+          notebookPageId: "reference",
+          notebookUuid: "abcd1234-abcd-1234-abcd-1234abcd1234",
+        },
+      },
+    ],
+  })();
+});

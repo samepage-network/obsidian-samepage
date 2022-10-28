@@ -36,15 +36,25 @@ const applyState = async (
         prefix: "[",
         suffix: `](${href})`,
       }),
-      image: ({ src }) => ({
+      image: ({ src }, content) => ({
         prefix: "![",
         suffix: `](${src})`,
+        replace: content === String.fromCharCode(0),
       }),
       block: ({ level, viewType }) => ({
         suffix: viewType === "document" ? "\n" : "",
         prefix: `${"".padStart(level - 1, "\t")}${
           viewType === "bullet" ? "- " : viewType === "numbered" ? "1. " : ""
         }`,
+      }),
+      reference: ({ notebookPageId, notebookUuid }, content) => ({
+        prefix: "[[",
+        suffix: `${
+          notebookUuid === plugin.data.settings["uuid"]
+            ? notebookPageId
+            : `${notebookUuid}:${notebookPageId}`
+        }]]`,
+        replace: content === String.fromCharCode(0),
       }),
     },
   });
@@ -76,84 +86,65 @@ const calculateState = async (
 export let granularChanges = { enabled: false };
 
 const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
-  const {
-    unload,
-    rejectPage,
-    joinPage,
-    isShared,
-    updatePage,
-    insertContent,
-    deleteContent,
-  } = loadSharePageWithNotebook({
-    applyState: (id, state) => applyState(id, state, plugin),
-    calculateState: (id) => calculateState(id, plugin),
-    getCurrentNotebookPageId: async () =>
-      plugin.app.workspace.getActiveFile()?.basename || "",
-    overlayProps: {
-      viewSharedPageProps: {
-        onLinkClick: (title, e) => {
-          if (e.shiftKey) {
-            app.workspace.getLeaf("split", "vertical");
+  const { unload, isShared, updatePage, insertContent, deleteContent } =
+    loadSharePageWithNotebook({
+      applyState: (id, state) => applyState(id, state, plugin),
+      calculateState: (id) => calculateState(id, plugin),
+      getCurrentNotebookPageId: async () =>
+        plugin.app.workspace.getActiveFile()?.basename || "",
+      createPage: (title) => plugin.app.vault.create(`${title}.md`, ""),
+      deletePage: async (title) => {
+        const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
+        if (newFile instanceof TFile) {
+          return plugin.app.vault.delete(newFile);
+        }
+      },
+      openPage: async (title) => {
+        const active = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+        const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
+        if (newFile instanceof TFile) {
+          if (active) {
+            return active.leaf.openFile(newFile);
           } else {
-            app.workspace.openLinkText(title, title);
+            return plugin.app.workspace.revealLeaf;
           }
-        },
-        linkNewPage: (_, title) =>
-          app.vault.create(title, "").then((f) => f.basename),
+        }
       },
-      notificationContainerProps: {
-        actions: {
-          accept: ({ title }) =>
-            plugin.app.vault
-              .create(`${title}.md`, "")
-              .then((file) =>
-                joinPage({
-                  notebookPageId: file.basename,
-                }).catch((e) => {
-                  plugin.app.vault.delete(file);
-                  return Promise.reject(e);
-                })
+      overlayProps: {
+        viewSharedPageProps: {
+          onLinkClick: (title, e) => {
+            if (e.shiftKey) {
+              app.workspace.getLeaf("split", "vertical");
+            } else {
+              app.workspace.openLinkText(title, title);
+            }
+          },
+          linkNewPage: (_, title) =>
+            app.vault.create(title, "").then((f) => f.basename),
+        },
+        sharedPageStatusProps: {
+          selector: ".workspace-leaf div.inline-title",
+          getPath: (el) => {
+            const workleafRoot =
+              el.parentElement &&
+              el.parentElement.closest<HTMLElement>(".workspace-leaf");
+            if (workleafRoot) {
+              const sel = v4();
+              workleafRoot.setAttribute("data-samepage-shared", sel);
+              return `div[data-samepage-shared="${sel}"] .cm-contentContainer`;
+            }
+            return null;
+          },
+          getHtmlElement: async (title) =>
+            Array.from(
+              document.querySelectorAll<HTMLHeadingElement>(
+                ".workspace-leaf div.inline-title"
               )
-              .then(() => {
-                const active =
-                  plugin.app.workspace.getActiveViewOfType(MarkdownView);
-                const newFile = plugin.app.vault.getAbstractFileByPath(
-                  `${title}.md`
-                );
-                if (newFile instanceof TFile && active) {
-                  active.leaf.openFile(newFile);
-                }
-              }),
-          reject: async ({ title }) =>
-            rejectPage({
-              notebookPageId: title,
-            }),
+            ).find((h) => h.textContent === title),
+          getNotebookPageId: async (el) => el.nodeValue,
         },
-        path: `.workspace-tabs.mod-top-right-space .workspace-tab-header-container .workspace-tab-header-tab-list`,
       },
-      sharedPageStatusProps: {
-        selector: ".workspace-leaf div.inline-title",
-        getPath: (el) => {
-          const workleafRoot =
-            el.parentElement &&
-            el.parentElement.closest<HTMLElement>(".workspace-leaf");
-          if (workleafRoot) {
-            const sel = v4();
-            workleafRoot.setAttribute("data-samepage-shared", sel);
-            return `div[data-samepage-shared="${sel}"] .cm-contentContainer`;
-          }
-          return null;
-        },
-        getHtmlElement: async (title) =>
-          Array.from(
-            document.querySelectorAll<HTMLHeadingElement>(
-              ".workspace-leaf div.inline-title"
-            )
-          ).find((h) => h.textContent === title),
-        getNotebookPageId: async (el) => el.nodeValue,
-      },
-    },
-  });
+    });
 
   let refreshRef: EventRef | undefined;
   const clearRefreshRef = () => {

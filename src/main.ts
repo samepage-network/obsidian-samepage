@@ -12,12 +12,6 @@ const defaultTypeById = Object.fromEntries(
   defaultSettings.map((s) => [s.id, s.type])
 );
 
-const IGNORED_LOGS = new Set([
-  "list-pages-success",
-  "load-remote-message",
-  "update-success",
-]);
-
 class SamePageSettingTab extends PluginSettingTab {
   plugin: SamePagePlugin;
 
@@ -105,7 +99,7 @@ class SamePagePlugin extends Plugin {
         // TODO - fix this typing
         if (defaultTypeById[s] === "string")
           this.data.settings[s as "uuid" | "token"] = v;
-        if (defaultTypeById[s] === "boolean")
+        else if (defaultTypeById[s] === "boolean")
           this.data.settings[s as "granular-changes" | "auto-connect"] =
             v === "true";
         this.save();
@@ -136,6 +130,7 @@ class SamePagePlugin extends Plugin {
       workspace: this.app.vault.getName(),
       renderOverlay,
       onAppLog: (evt) => evt.intent !== "debug" && new Notice(evt.content),
+      notificationContainerPath: `.workspace-tabs.mod-top-right-space .workspace-tab-header-container .workspace-tab-header-tab-list`,
     });
     return unload;
   }

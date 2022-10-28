@@ -15,6 +15,7 @@ import lexer, {
    createLinkToken,
    createBlockTokens,
    createEmpty,
+   createReferenceToken,
 } from "./leafLexer";
 %}
 
@@ -33,6 +34,7 @@ token -> %strike tokens %strike {% createStrikethroughToken %}
    | %star tokens %star {% createItalicsToken %}
    | %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createLinkToken %}
    | %exclamationMark %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createImageToken %}
+   | %reference {% createReferenceToken %}
    | %text {% createTextToken %}
    | %star  {% createTextToken %}
    | %carot  {% createTextToken %}

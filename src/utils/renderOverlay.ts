@@ -46,7 +46,7 @@ const renderOverlay: RenderOverlay = ({
   };
   // TODO - need a better way to solve this race condition
   if (parent.id === "samepage-notification-container") {
-    setTimeout(finishRendering, 1000);
+    setTimeout(finishRendering, 100);
   } else {
     finishRendering();
   }
