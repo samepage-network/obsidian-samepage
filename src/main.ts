@@ -7,6 +7,7 @@ import setupSharePageWithNotebook, {
   granularChanges,
 } from "./protocols/sharePageWithNotebook";
 import renderOverlay from "./utils/renderOverlay";
+import setupNotebookQuerying from "./protocols/notebookQuerying";
 
 const defaultTypeById = Object.fromEntries(
   defaultSettings.map((s) => [s.id, s.type])
@@ -136,7 +137,12 @@ class SamePagePlugin extends Plugin {
   }
 
   setupProtocols() {
-    return setupSharePageWithNotebook(this);
+    const unloadSharePage = setupSharePageWithNotebook(this);
+    const unloadNotebookQuerying = setupNotebookQuerying(this);
+    return () => {
+      unloadNotebookQuerying();
+      unloadSharePage();
+    };
   }
 
   async onload() {
