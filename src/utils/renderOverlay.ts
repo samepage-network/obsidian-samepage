@@ -3,10 +3,6 @@ import { createRoot } from "react-dom/client";
 import { RenderOverlay } from "samepage/internal/types";
 import { v4 } from "uuid";
 
-export type OverlayProps<T extends Record<string, unknown>> = {
-  onClose: () => void;
-} & T;
-
 const renderOverlay: RenderOverlay = ({
   id = v4(),
   Overlay = (props) => React.createElement("div", props),

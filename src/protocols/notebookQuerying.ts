@@ -4,9 +4,11 @@ import leafGrammar from "../utils/leafGrammar.ne";
 import setupNotebookQuerying from "samepage/protocols/notebookQuerying";
 import { TFile } from "obsidian";
 import type SamePagePlugin from "../main";
+import createHTMLObserver from "samepage/utils/createHTMLObserver";
+import { render as referenceRender } from "../components/ExternalNotebookReference";
 
 const setup = (plugin: SamePagePlugin) => {
-  const { unload, query } = setupNotebookQuerying({
+  const { unload } = setupNotebookQuerying({
     onQuery: async (notebookPageId) => {
       const abstractFile = plugin.app.vault.getAbstractFileByPath(
         `${notebookPageId}.md`
@@ -19,7 +21,7 @@ const setup = (plugin: SamePagePlugin) => {
     },
     onQueryResponse: async ({ data, request }) => {
       document.body.dispatchEvent(
-        new CustomEvent("samepage:reference", {
+        new CustomEvent("samepage:reference:response", {
           detail: {
             request,
             data,
@@ -28,8 +30,12 @@ const setup = (plugin: SamePagePlugin) => {
       );
     },
   });
-  // how to show it?
+  const observer = createHTMLObserver<HTMLSpanElement>({
+    callback: (s) => referenceRender(s, plugin),
+    selector: "span.cm-hmd-internal-link",
+  });
   return () => {
+    observer.disconnect();
     unload();
   };
 };

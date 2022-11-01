@@ -8,56 +8,20 @@ import { EventRef, MarkdownView, TFile } from "obsidian";
 import Automerge from "automerge";
 import { v4 } from "uuid";
 import renderAtJson from "samepage/utils/renderAtJson";
+import atJsonToObsidian from "../utils/atJsonToObsidian";
 
 const applyState = async (
   notebookPageId: string,
   state: Schema,
   plugin: SamePagePlugin
 ) => {
-  const expectedText = renderAtJson({
-    state: {
-      annotations: state.annotations,
+  const expectedText = atJsonToObsidian(
+    {
       content: state.content.toString(),
+      annotations: state.annotations,
     },
-    applyAnnotation: {
-      bold: {
-        prefix: "**",
-        suffix: `**`,
-      },
-      italics: {
-        prefix: "_",
-        suffix: `_`,
-      },
-      strikethrough: {
-        prefix: "~~",
-        suffix: `~~`,
-      },
-      link: ({ href }) => ({
-        prefix: "[",
-        suffix: `](${href})`,
-      }),
-      image: ({ src }, content) => ({
-        prefix: "![",
-        suffix: `](${src})`,
-        replace: content === String.fromCharCode(0),
-      }),
-      block: ({ level, viewType }) => ({
-        suffix: viewType === "document" ? "\n" : "",
-        prefix: `${"".padStart(level - 1, "\t")}${
-          viewType === "bullet" ? "- " : viewType === "numbered" ? "1. " : ""
-        }`,
-      }),
-      reference: ({ notebookPageId, notebookUuid }, content) => ({
-        prefix: "[[",
-        suffix: `${
-          notebookUuid === plugin.data.settings["uuid"]
-            ? notebookPageId
-            : `${notebookUuid}:${notebookPageId}`
-        }]]`,
-        replace: content === String.fromCharCode(0),
-      }),
-    },
-  });
+    plugin
+  );
   const abstractFile = plugin.app.vault.getAbstractFileByPath(
     `${notebookPageId}.md`
   );
