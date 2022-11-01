@@ -1,5 +1,6 @@
 import atJsonParser from "samepage/utils/atJsonParser";
-import leafGrammar from "../utils/leafGrammar";
+// @ts-ignore for now until we fix types
+import leafGrammar from "../utils/leafGrammar.ne";
 import setupNotebookQuerying from "samepage/protocols/notebookQuerying";
 import { TFile } from "obsidian";
 import type SamePagePlugin from "../main";
