@@ -74,6 +74,8 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
           }
         }
       },
+      doesPageExist: async (title) =>
+        !!plugin.app.vault.getAbstractFileByPath(`${title}.md`),
       overlayProps: {
         viewSharedPageProps: {
           onLinkClick: (title, e) => {

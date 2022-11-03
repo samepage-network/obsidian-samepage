@@ -101,7 +101,7 @@ class SamePagePlugin extends Plugin {
         if (defaultTypeById[s] === "string")
           this.data.settings[s as "uuid" | "token"] = v;
         else if (defaultTypeById[s] === "boolean")
-          this.data.settings[s as "granular-changes" | "auto-connect"] =
+          this.data.settings[s as "granular-changes"] =
             v === "true";
         this.save();
       },
