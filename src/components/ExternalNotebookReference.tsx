@@ -4,7 +4,6 @@ import type { InitialSchema, OverlayProps } from "samepage/internal/types";
 import apiClient from "samepage/internal/apiClient";
 import atJsonToObsidian from "../utils/atJsonToObsidian";
 import type { default as SamePagePlugin } from "../main";
-import renderOverlay from "../utils/renderOverlay";
 
 export const references: Record<string, Record<string, InitialSchema>> = {};
 
@@ -79,23 +78,6 @@ const ExternalNotebookReference = ({
       </div>
     </Dialog>
   );
-};
-
-export const render = (s: HTMLSpanElement, plugin: SamePagePlugin) => {
-  const text = s.textContent;
-  if (text) {
-    const [notebookUuid, notebookPageId] = text.split(":");
-    if (notebookPageId) {
-      s.onmousedown = (e) => {
-        renderOverlay({
-          Overlay: ExternalNotebookReference,
-          props: { notebookPageId, notebookUuid, plugin },
-        });
-        e.preventDefault();
-        e.stopPropagation();
-      };
-    }
-  }
 };
 
 export default ExternalNotebookReference;

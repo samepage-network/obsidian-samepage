@@ -5,7 +5,9 @@ import setupNotebookQuerying from "samepage/protocols/notebookQuerying";
 import { TFile } from "obsidian";
 import type SamePagePlugin from "../main";
 import createHTMLObserver from "samepage/utils/createHTMLObserver";
-import { render as referenceRender } from "../components/ExternalNotebookReference";
+import ExternalNotebookReference from "../components/ExternalNotebookReference";
+import renderOverlay from "../utils/renderOverlay";
+import { v4 } from "uuid";
 
 const setup = (plugin: SamePagePlugin) => {
   const { unload } = setupNotebookQuerying({
@@ -30,9 +32,39 @@ const setup = (plugin: SamePagePlugin) => {
       );
     },
   });
+  // can't use data attributes bc codemirror removes em
+  const listeners: {
+    el: HTMLSpanElement;
+    listener: (e: MouseEvent) => void;
+  }[] = [];
   const observer = createHTMLObserver<HTMLSpanElement>({
-    callback: (s) => referenceRender(s, plugin),
+    callback: (s) => {
+      const text = s.textContent;
+      if (text && !listeners.some((l) => l.el === s)) {
+        const [notebookUuid, notebookPageId] = text.split(":");
+        if (notebookPageId) {
+          const listener = (e: MouseEvent) => {
+            renderOverlay({
+              Overlay: ExternalNotebookReference,
+              props: { notebookPageId, notebookUuid, plugin },
+            });
+            e.preventDefault();
+            e.stopPropagation();
+          };
+          s.addEventListener("mousedown", listener);
+          listeners.push({ listener, el: s });
+        }
+      }
+    },
     selector: "span.cm-hmd-internal-link",
+    onRemove: (s) => {
+      const index = listeners.findIndex((l) => l.el === s);
+      if (index >= 0) {
+        s.removeEventListener("mousedown", listeners[index].listener);
+        listeners.splice(index, 1);
+      }
+    },
+    observeClassName: true,
   });
   return () => {
     observer.disconnect();
