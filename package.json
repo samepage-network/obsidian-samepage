@@ -10,22 +10,26 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dvargas92495/obsidian-samepage.git"
+    "url": "git+https://github.com/samepage-network/obsidian-samepage.git"
   },
   "keywords": [
     "Obsidian",
     "SamePage"
   ],
-  "author": "dvargas92495 <dvargas92495@gmail.com>",
+  "author": {
+    "name": "SamePage",
+    "email": "support@samepage.network",
+    "url": "https://samepage.network"
+  },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/dvargas92495/obsidian-samepage/issues"
+    "url": "https://github.com/samepage-network/obsidian-samepage/issues"
   },
-  "homepage": "https://github.com/dvargas92495/obsidian-samepage#readme",
+  "homepage": "https://github.com/samepage-network/obsidian-samepage#readme",
   "devDependencies": {
     "obsidian": "^0.16.0"
   },
   "dependencies": {
-    "samepage": "^0.28.5"
+    "samepage": "^0.29.4"
   }
 }

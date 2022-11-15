@@ -1,0 +1,33 @@
+name: Test Extension
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches: main
+    paths:
+      - "tests/**"
+      - ".github/workflows/tests.yaml"
+
+env:
+  API_URL: https://api.samepage.network
+  AWS_ACCESS_KEY_ID: ${{ secrets.SAMEPAGE_AWS_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.SAMEPAGE_AWS_ACCESS_SECRET }}
+  AWS_REGION: us-east-1
+  PLAYWRIGHT_HTML_REPORT: playwright-report
+  SAMEPAGE_TEST_UUID: ${{ secrets.SAMEPAGE_TEST_UUID }},
+  SAMEPAGE_TEST_TOKEN: ${{ secrets.SAMEPAGE_TEST_TOKEN }},
+  WEB_SOCKET_URL: wss://ws.samepage.network
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: install
+        run: npm install
+      - name: install playwright
+        run: npx playwright install
+      - name: test
+        run: npm t
+        env:
+          DEBUG: 1
