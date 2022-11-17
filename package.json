@@ -4,6 +4,7 @@
   "description": "Official Obsidian client into the intra tool-for-thought protocol.",
   "main": "./dist/index.js",
   "scripts": {
+    "postversion": "node scripts/postversion.js",
     "start": "node scripts/start.js",
     "pretest": "npx nearleyc src/utils/leafGrammar.ne --out src/utils/leafGrammar.ts",
     "test": "node scripts/test.js"
@@ -30,6 +31,6 @@
     "obsidian": "^0.16.0"
   },
   "dependencies": {
-    "samepage": "^0.29.9"
+    "samepage": "^0.30.1"
   }
 }

@@ -2,12 +2,12 @@ const fs = require("fs");
 
 module.exports = () => {
   const { version } = JSON.parse(
-    fs.readFileSync("dist/package.json").toString()
+    fs.readFileSync("package.json").toString()
   );
   fs.writeFileSync(
-    "dist/manifest.json",
+    "manifest.json",
     fs
-      .readFileSync("dist/manifest.json")
+      .readFileSync("manifest.json")
       .toString()
       .replace(/"version": "[\d.-]+",/, `"version": "${version}",`)
   );
