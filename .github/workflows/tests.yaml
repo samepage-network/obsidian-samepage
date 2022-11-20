@@ -29,5 +29,3 @@ jobs:
         run: npx playwright install
       - name: test
         run: npm t
-        env:
-          DEBUG: 1

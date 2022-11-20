@@ -6,7 +6,7 @@ Use SamePage to connect your Obsidian Vault to other notebooks to sync changes a
 
 ## Demo
 
-<video src="https://samepage.network/videos/9f124d41ca8a47f4b09bc6d268cb36b8" controls="controls" height="600"></video>
+<video src="https://samepage.network/videos/9f124d41ca8a47f4b09bc6d268cb36b8.mp4" controls="controls" height="400" width="600"></video>
 
 ## WARNING
 
