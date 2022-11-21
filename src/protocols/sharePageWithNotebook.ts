@@ -47,8 +47,6 @@ const calculateState = async (
   return atJsonParser(leafGrammar, content);
 };
 
-export let granularChanges = { enabled: false };
-
 const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
   const { unload, isShared, updatePage, insertContent, deleteContent } =
     loadSharePageWithNotebook({
@@ -119,13 +117,13 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       refreshRef = undefined;
     }
   };
-  const refreshState = (notebookPageId: string) => {
+  const refreshState = (notebookPageId: string, label: string) => {
     refreshRef = plugin.app.vault.on("modify", async () => {
       clearRefreshRef();
       const doc = await calculateState(notebookPageId, plugin);
       updatePage({
         notebookPageId,
-        label: `Refresh`,
+        label,
         callback: (oldDoc) => {
           oldDoc.content.deleteAt?.(0, oldDoc.content.length);
           oldDoc.content.insertAt?.(0, ...new Automerge.Text(doc.content));
@@ -135,12 +133,6 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
         },
       });
     });
-  };
-  const previousSelection = {
-    selectionStart: 0,
-    selectionEnd: 0,
-    blockStart: 0,
-    blockEnd: 0,
   };
   const bodyKeyDownListener = async (e: KeyboardEvent) => {
     const el = e.target as HTMLElement;
@@ -155,57 +147,8 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       const notebookPageId = plugin.app.workspace.getActiveFile()?.basename;
       if (notebookPageId && isShared(notebookPageId)) {
         clearRefreshRef();
-        const { selectionStart, selectionEnd, blockStart, blockEnd } =
-          previousSelection;
-        const getBlockAnnotationStart = () => {
-          const md = view.editor.getValue();
-          const { annotations } = atJsonParser(leafGrammar, md);
-          return (
-            annotations.filter((b) => b.type === "block")[blockStart]?.start ||
-            0
-          );
-        };
-        if (granularChanges.enabled && /^[a-zA-Z0-9 ]$/.test(e.key)) {
-          const start = getBlockAnnotationStart();
-          (selectionStart !== selectionEnd
-            ? deleteContent({
-                notebookPageId,
-                index: start + Math.min(selectionStart, selectionEnd),
-                count: Math.abs(selectionEnd - selectionStart),
-              })
-            : Promise.resolve()
-          ).then(() =>
-            insertContent({
-              notebookPageId,
-              content: e.key,
-              index: start + view.editor.getCursor().ch,
-            })
-          );
-        } else if (granularChanges.enabled && /^Backspace$/.test(e.key)) {
-          const index =
-            getBlockAnnotationStart() + Math.min(selectionStart, selectionEnd);
-          deleteContent({
-            notebookPageId,
-            index:
-              selectionEnd === selectionStart && blockStart === blockEnd
-                ? index - 1
-                : index,
-            count:
-              selectionEnd === selectionStart && blockStart === blockEnd
-                ? 1
-                : Math.abs(selectionStart - selectionEnd),
-          });
-        } else {
-          refreshState(notebookPageId);
-        }
+        refreshState(notebookPageId, `Key Presses - ${e.key}`);
       }
-    }
-    if (view) {
-      const [sel] = view.editor.listSelections();
-      previousSelection.selectionStart = sel.head.ch;
-      previousSelection.selectionEnd = sel.anchor.ch;
-      previousSelection.blockEnd = sel.anchor.line;
-      previousSelection.blockStart = sel.head.line;
     }
   };
   plugin.registerDomEvent(document.body, "keydown", bodyKeyDownListener);
@@ -218,7 +161,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       const notebookPageId = plugin.app.workspace.getActiveFile()?.basename;
       if (notebookPageId && isShared(notebookPageId)) {
         clearRefreshRef();
-        refreshState(notebookPageId);
+        refreshState(notebookPageId, "Paste");
       }
     }
   };

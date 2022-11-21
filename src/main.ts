@@ -3,9 +3,7 @@ import defaultSettings, {
   DefaultSetting,
 } from "samepage/utils/defaultSettings";
 import setupSamePageClient from "samepage/protocols/setupSamePageClient";
-import setupSharePageWithNotebook, {
-  granularChanges,
-} from "./protocols/sharePageWithNotebook";
+import setupSharePageWithNotebook from "./protocols/sharePageWithNotebook";
 import renderOverlay from "./utils/renderOverlay";
 import setupNotebookQuerying from "./protocols/notebookQuerying";
 
@@ -29,20 +27,17 @@ class SamePageSettingTab extends PluginSettingTab {
       const setting = new Setting(containerEl)
         .setName(s.name)
         .setDesc(s.description);
-      if (s.type === "boolean") {
+     /* if (s.type === "boolean") {
         setting.addToggle((toggle) => {
           const saved = this.plugin.data.settings[s.id];
           toggle
             .setValue(typeof saved !== "boolean" ? s.default : saved)
             .onChange((value) => {
               this.plugin.data.settings[s.id] = value;
-              if (s.id === "granular-changes") {
-                granularChanges.enabled = value;
-              }
               this.plugin.save();
             });
         });
-      } else if (s.type === "string") {
+      } else*/ if (s.type === "string") {
         setting.addText((text) => {
           const saved = this.plugin.data.settings[s.id];
           text
@@ -100,9 +95,9 @@ class SamePagePlugin extends Plugin {
         // TODO - fix this typing
         if (defaultTypeById[s] === "string")
           this.data.settings[s as "uuid" | "token"] = v;
-        else if (defaultTypeById[s] === "boolean")
-          this.data.settings[s as "granular-changes"] =
-            v === "true";
+       /* else if (defaultTypeById[s] === "boolean")
+          this.data.settings[s] =
+            v === "true";*/
         this.save();
       },
       addCommand: ({ label, callback }) => {
