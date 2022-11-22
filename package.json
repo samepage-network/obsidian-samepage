@@ -31,6 +31,6 @@
     "obsidian": "^0.16.0"
   },
   "dependencies": {
-    "samepage": "^0.30.8"
+    "samepage": "^0.30.10"
   }
 }
