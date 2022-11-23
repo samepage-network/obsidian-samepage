@@ -4,7 +4,7 @@
     "version": "2.0.3",
     "minAppVersion": "0.15.0",
     "description": "Official Obsidian client into the inter-TFT-protocol",
-    "author": "dvargas92495",
+    "author": "samepage-network",
     "authorUrl": "https://samepage.network",
     "isDesktopOnly": true
 }
