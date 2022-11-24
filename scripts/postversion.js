@@ -10,5 +10,5 @@ fs.writeFileSync(
     .replace(/"version": "[\d.-]+",/, `"version": "${version}",`)
 );
 execSync("git add --all", { stdio: "inherit" });
-execSync("git commit --amend -n", { stdio: "inherit" });
+execSync("git commit --amend --no-edit", { stdio: "inherit" });
 // execSync("git push origin main", { stdio: "inherit" });
