@@ -15,12 +15,6 @@ const runTest = (md: string, expected: InitialSchema) => () => {
   const output = atJsonParser(leafGrammar, md);
   expect(output).toBeTruthy();
   expect(output).toEqual(expected);
-  // expect(output.content).toEqual(expected.content);
-  // expected.annotations.forEach((e, i) => {
-  //   expect(output.annotations[i]).toEqual(e);
-  // });
-  // expect(output.annotations[expected.annotations.length]).toBeUndefined();
-  // expect(expected.annotations[output.annotations.length]).toBeUndefined();
 };
 
 test(
@@ -347,3 +341,23 @@ test("A cross app block reference", () => {
     ],
   })();
 });
+
+test(
+  "Double italics",
+  runTest("Deal _with_ two _sets_ of italics", {
+    content: "Deal with two sets of italics\n",
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+        end: 30,
+        start: 0,
+        type: "block",
+      },
+      { start: 5, end: 9, type: "italics" },
+      { start: 14, end: 18, type: "italics" },
+    ],
+  })
+);

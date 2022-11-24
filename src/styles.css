@@ -10,6 +10,7 @@ div.view-header {
 }
 span.samepage-shared-page-status {
   margin-bottom: 0;
+  background: var(--background-secondary);
 }
 .samepage-notification-container h4 {
   margin: 4px 0;

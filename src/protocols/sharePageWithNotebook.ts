@@ -68,7 +68,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
           if (active) {
             return active.leaf.openFile(newFile);
           } else {
-            return plugin.app.workspace.revealLeaf;
+            return app.workspace.openLinkText(title, title);
           }
         }
       },
