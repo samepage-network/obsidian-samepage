@@ -40,6 +40,8 @@ token -> %strike tokens %strike {% createStrikethroughToken %}
    | %carot  {% createTextToken %}
    | %tilde  {% createTextToken %}
    | %under  {% createTextToken %}
+   | %boldStar {% createTextToken %}
+   | %boldUnder {% createTextToken %}
    | %leftParen {% createTextToken %}
    | %leftBracket {% createTextToken %}
    | %rightParen {% createTextToken %}

@@ -361,3 +361,39 @@ test(
     ],
   })
 );
+
+test(
+  "Just double underscore should be valid",
+  runTest("Review __public pages", {
+    content: "Review __public pages\n",
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+        end: 22,
+        start: 0,
+        type: "block",
+      },
+    ],
+  })
+);
+
+test(
+  "Just double asterisk should be valid",
+  runTest("Review **public pages", {
+    content: "Review **public pages\n",
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+        end: 22,
+        start: 0,
+        type: "block",
+      },
+    ],
+  })
+);
