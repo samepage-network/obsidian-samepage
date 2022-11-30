@@ -107,16 +107,16 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
             )
           )
             .map((el) =>
-              (el as HTMLElement)
-                .closest(`.workspace-leaf-content`)
+              (el.nodeName === "DIV" ? (el as HTMLElement) : el.parentElement)
+                ?.closest(`.workspace-leaf-content`)
                 ?.querySelector<HTMLDivElement>(
                   "div.view-header-title-container"
                 )
             )
             .find((h) => h?.textContent === title) || undefined,
         getNotebookPageId: async (el) =>
-          (el as HTMLElement)
-            .closest(`.workspace-leaf-content`)
+          (el.nodeName === "DIV" ? (el as HTMLElement) : el.parentElement)
+            ?.closest(`.workspace-leaf-content`)
             ?.querySelector(".view-header-title-container")?.textContent ||
           null,
       },
