@@ -397,3 +397,39 @@ test(
     ],
   })
 );
+
+test(
+  "Double page tags",
+  runTest("One [[page]] and two [[pages]]", {
+    content: `One ${String.fromCharCode(0)} and two ${String.fromCharCode(0)}\n`,
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+        end: 16,
+        start: 0,
+        type: "block",
+      },
+      {
+        start: 4,
+        end: 5,
+        type: "reference",
+        attributes: {
+          notebookPageId: "page",
+          notebookUuid,
+        },
+      },
+      {
+        start: 14,
+        end: 15,
+        type: "reference",
+        attributes: {
+          notebookPageId: "pages",
+          notebookUuid,
+        },
+      },
+    ],
+  })
+);

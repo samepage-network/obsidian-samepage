@@ -11,4 +11,4 @@ fs.writeFileSync(
 );
 execSync("git add --all", { stdio: "inherit" });
 execSync("git commit --amend --no-edit", { stdio: "inherit" });
-// execSync("git push origin main", { stdio: "inherit" });
+execSync("git push origin main", { stdio: "inherit" });

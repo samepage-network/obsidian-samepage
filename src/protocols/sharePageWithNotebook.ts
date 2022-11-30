@@ -47,68 +47,81 @@ const calculateState = async (
   return atJsonParser(leafGrammar, content);
 };
 
+const getCurrentNotebookPageId = (plugin: SamePagePlugin) =>
+  (plugin.app.workspace.getActiveFile()?.path || "")?.replace(/\.md$/, "");
+
 const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
-  const { unload, isShared, updatePage, insertContent, deleteContent } =
-    loadSharePageWithNotebook({
-      applyState: (id, state) => applyState(id, state, plugin),
-      calculateState: (id) => calculateState(id, plugin),
-      getCurrentNotebookPageId: async () =>
-        plugin.app.workspace.getActiveFile()?.basename || "",
-      createPage: (title) => plugin.app.vault.create(`${title}.md`, ""),
-      deletePage: async (title) => {
-        const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
-        if (newFile instanceof TFile) {
-          return plugin.app.vault.delete(newFile);
+  const { unload, isShared, updatePage } = loadSharePageWithNotebook({
+    applyState: (id, state) => applyState(id, state, plugin),
+    calculateState: (id) => calculateState(id, plugin),
+    getCurrentNotebookPageId: async () => getCurrentNotebookPageId(plugin),
+    createPage: (title) => plugin.app.vault.create(`${title}.md`, ""),
+    deletePage: async (title) => {
+      const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
+      if (newFile instanceof TFile) {
+        return plugin.app.vault.delete(newFile);
+      }
+    },
+    openPage: async (title) => {
+      const active = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+      const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
+      if (newFile instanceof TFile) {
+        if (active) {
+          return active.leaf.openFile(newFile);
+        } else {
+          return app.workspace.openLinkText(title, title);
         }
-      },
-      openPage: async (title) => {
-        const active = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-        const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
-        if (newFile instanceof TFile) {
-          if (active) {
-            return active.leaf.openFile(newFile);
+      }
+    },
+    doesPageExist: async (title) =>
+      !!plugin.app.vault.getAbstractFileByPath(`${title}.md`),
+    overlayProps: {
+      viewSharedPageProps: {
+        onLinkClick: (title, e) => {
+          if (e.shiftKey) {
+            app.workspace.getLeaf("split", "vertical");
           } else {
-            return app.workspace.openLinkText(title, title);
+            app.workspace.openLinkText(title, title);
           }
-        }
-      },
-      doesPageExist: async (title) =>
-        !!plugin.app.vault.getAbstractFileByPath(`${title}.md`),
-      overlayProps: {
-        viewSharedPageProps: {
-          onLinkClick: (title, e) => {
-            if (e.shiftKey) {
-              app.workspace.getLeaf("split", "vertical");
-            } else {
-              app.workspace.openLinkText(title, title);
-            }
-          },
-          linkNewPage: (_, title) =>
-            app.vault.create(title, "").then((f) => f.basename),
         },
-        sharedPageStatusProps: {
-          selector: ".workspace-leaf div.inline-title",
-          getPath: (el) => {
-            const workleafRoot =
-              el.parentElement &&
-              el.parentElement.closest<HTMLElement>(".workspace-leaf");
-            if (workleafRoot) {
-              const sel = v4();
-              workleafRoot.setAttribute("data-samepage-shared", sel);
-              return `div[data-samepage-shared="${sel}"] .cm-contentContainer`;
-            }
-            return null;
-          },
-          getHtmlElement: async (title) =>
-            Array.from(
-              document.querySelectorAll<HTMLHeadingElement>(
-                ".workspace-leaf div.inline-title"
-              )
-            ).find((h) => h.textContent === title),
-          getNotebookPageId: async (el) => el.nodeValue,
-        },
+        linkNewPage: (_, title) =>
+          app.vault.create(title, "").then((f) => f.path.replace(/\.md$/, "")),
       },
-    });
+      sharedPageStatusProps: {
+        selector: ".workspace-leaf div.inline-title",
+        getPath: (el) => {
+          const workleafRoot =
+            el.parentElement &&
+            el.parentElement.closest<HTMLElement>(".workspace-leaf");
+          if (workleafRoot) {
+            const sel = v4();
+            workleafRoot.setAttribute("data-samepage-shared", sel);
+            return `div[data-samepage-shared="${sel}"] .cm-contentContainer`;
+          }
+          return null;
+        },
+        getHtmlElement: async (title) =>
+          Array.from(
+            document.querySelectorAll<HTMLHeadingElement>(
+              ".workspace-leaf div.inline-title"
+            )
+          )
+            .map((el) =>
+              (el as HTMLElement)
+                .closest(`.workspace-leaf-content`)
+                ?.querySelector<HTMLDivElement>(
+                  "div.view-header-title-container"
+                )
+            )
+            .find((h) => h?.textContent === title) || undefined,
+        getNotebookPageId: async (el) =>
+          (el as HTMLElement)
+            .closest(`.workspace-leaf-content`)
+            ?.querySelector(".view-header-title-container")?.textContent ||
+          null,
+      },
+    },
+  });
 
   let refreshRef: EventRef | undefined;
   const clearRefreshRef = () => {
@@ -144,7 +157,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
     } else if (/^Arrow/.test(e.key)) {
       // no-op
     } else if (el.tagName === "DIV" && el.classList.contains("cm-content")) {
-      const notebookPageId = plugin.app.workspace.getActiveFile()?.basename;
+      const notebookPageId = getCurrentNotebookPageId(plugin);
       if (notebookPageId && isShared(notebookPageId)) {
         clearRefreshRef();
         refreshState(notebookPageId, `Key Presses - ${e.key}`);
@@ -158,7 +171,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
     if (!view) {
       // no-op
     } else if (el.tagName === "DIV" && el.classList.contains("cm-content")) {
-      const notebookPageId = plugin.app.workspace.getActiveFile()?.basename;
+      const notebookPageId = getCurrentNotebookPageId(plugin);
       if (notebookPageId && isShared(notebookPageId)) {
         clearRefreshRef();
         refreshState(notebookPageId, "Paste");
