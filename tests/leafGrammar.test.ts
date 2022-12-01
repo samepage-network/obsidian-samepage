@@ -31,8 +31,7 @@ const runTest =
     const output = atJsonParser(leafGrammar, md);
     expect(output).toBeTruthy();
     expect(output).toEqual(expected);
-    // Blocked on ending new lines issue
-    // if (!opts.skipInverse) expect(atJsonToObsidian(output)).toEqual(md);
+    if (!opts.skipInverse) expect(atJsonToObsidian(output)).toEqual(md);
   };
 
 test(
