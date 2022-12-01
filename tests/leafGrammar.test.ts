@@ -568,3 +568,45 @@ test(
     ],
   })
 );
+
+test(
+  "Underscore within bold underscores",
+  runTest(
+    "__hello_world__",
+    {
+      content: "hello_world\n",
+      annotations: [
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 12,
+          start: 0,
+          type: "block",
+        },
+        { end: 11, start: 0, type: "bold" },
+      ],
+    },
+    { skipInverse: true }
+  )
+);
+
+test(
+  "Asterisk within bold stars",
+  runTest("**hello*world**", {
+    content: "hello*world\n",
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+        end: 12,
+        start: 0,
+        type: "block",
+      },
+      { end: 11, start: 0, type: "bold" },
+    ],
+  })
+);
