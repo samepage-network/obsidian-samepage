@@ -10,6 +10,11 @@ const lexer = compileLexer(
     reference: /\[\[[^\]]+\]\]/,
     bullet: { match: /- / },
     numbered: { match: /\d+\. / },
+    openUnder: { match: /_(?=[^_]+_)/, lineBreaks: true },
+    openStar: { match: /\*(?=[^*]+\*)/, lineBreaks: true },
+    openDoubleUnder: { match: /__(?=(?:[^_]|_[^_])*__)/, lineBreaks: true },
+    openDoubleStar: { match: /\*\*(?=(?:[^*]|\*[^*])*\*\*)/, lineBreaks: true },
+    openDoubleTilde: { match: /~~(?=(?:[^~]|~[^~])*~~)/, lineBreaks: true },
     text: { match: /[^~_*[\]\n\t!()]+/, lineBreaks: true },
     newLine: { match: /\n/, lineBreaks: true },
     tab: { match: /\t/ },
@@ -155,5 +160,10 @@ export const createReferenceToken: Processor<InitialSchema> = (_data) => {
     ],
   };
 };
+
+export const createNull: Processor<InitialSchema> = () => ({
+  content: String.fromCharCode(0),
+  annotations: [],
+});
 
 export default lexer;

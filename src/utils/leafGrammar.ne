@@ -16,6 +16,7 @@ import lexer, {
    createBlockTokens,
    createEmpty,
    createReferenceToken,
+   createNull,
 } from "./leafLexer";
 %}
 
@@ -27,11 +28,11 @@ main -> (%tab:* tokens {% ([a,b]) => ({...b, tabs: a.length, viewType: "document
 
 tokens -> token:+ {% disambiguateTokens %} | null {% createEmpty %}
 
-token -> %strike tokens %strike {% createStrikethroughToken %}
-   | %boldUnder tokens %boldUnder {% createBoldToken %}
-   | %boldStar tokens %boldStar  {% createBoldToken %}
-   | %under tokens %under {% createItalicsToken %}
-   | %star tokens %star {% createItalicsToken %}
+token -> %openDoubleTilde (tokens {% id %} | null {% createNull %}) (%strike | %openDoubleTilde) {% createStrikethroughToken %}
+   | %openDoubleUnder (tokens {% id %} | null {% createNull %}) (%boldUnder | %openDoubleUnder) {% createBoldToken %}
+   | %openDoubleStar (tokens {% id %} | null {% createNull %}) (%boldStar | %openDoubleStar)  {% createBoldToken %}
+   | %openUnder tokens (%under | %openUnder) {% createItalicsToken %}
+   | %openStar tokens (%star | %openStar) {% createItalicsToken %}
    | %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createLinkToken %}
    | %exclamationMark %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createImageToken %}
    | %reference {% createReferenceToken %}
@@ -42,6 +43,7 @@ token -> %strike tokens %strike {% createStrikethroughToken %}
    | %under  {% createTextToken %}
    | %boldStar {% createTextToken %}
    | %boldUnder {% createTextToken %}
+   | %strike {% createTextToken %}
    | %leftParen {% createTextToken %}
    | %leftBracket {% createTextToken %}
    | %rightParen {% createTextToken %}

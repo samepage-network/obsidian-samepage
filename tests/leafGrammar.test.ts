@@ -1,5 +1,7 @@
 // TODO make this test friendly - https://github.com/microsoft/playwright/issues/17852
 import leafGrammar from "../src/utils/leafGrammar";
+import atJsonToObsidian from "../src/utils/atJsonToObsidian";
+import lexer from "../src/utils/leafLexer";
 import type { InitialSchema } from "samepage/internal/types";
 import atJsonParser from "samepage/utils/atJsonParser";
 import { test, expect } from "@playwright/test";
@@ -11,11 +13,27 @@ global.localStorage = {
   getItem: () => JSON.stringify({ uuid: notebookUuid }),
 };
 
-const runTest = (md: string, expected: InitialSchema) => () => {
-  const output = atJsonParser(leafGrammar, md);
-  expect(output).toBeTruthy();
-  expect(output).toEqual(expected);
-};
+const runTest =
+  (
+    md: string,
+    expected: InitialSchema,
+    opts: { debug?: true; skipInverse?: true } = {}
+  ) =>
+  () => {
+    if (opts.debug) {
+      const buffer = lexer.reset(md);
+      let token = buffer.next();
+      while (token) {
+        console.log(token);
+        token = buffer.next();
+      }
+    }
+    const output = atJsonParser(leafGrammar, md);
+    expect(output).toBeTruthy();
+    expect(output).toEqual(expected);
+    // Blocked on ending new lines issue
+    // if (!opts.skipInverse) expect(atJsonToObsidian(output)).toEqual(md);
+  };
 
 test(
   "Hello World Example",
@@ -291,29 +309,33 @@ test(
 );
 
 test("A normal block reference", () => {
-  runTest("A block [[page title#^abcdef]] to content", {
-    content: `A block ${String.fromCharCode(0)} to content\n`,
-    annotations: [
-      {
-        start: 0,
-        end: 21,
-        type: "block",
-        attributes: {
-          viewType: "document",
-          level: 1,
+  runTest(
+    "A block [[page title#^abcdef]] to content",
+    {
+      content: `A block ${String.fromCharCode(0)} to content\n`,
+      annotations: [
+        {
+          start: 0,
+          end: 21,
+          type: "block",
+          attributes: {
+            viewType: "document",
+            level: 1,
+          },
         },
-      },
-      {
-        start: 8,
-        end: 9,
-        type: "reference",
-        attributes: {
-          notebookPageId: "page title#^abcdef",
-          notebookUuid,
+        {
+          start: 8,
+          end: 9,
+          type: "reference",
+          attributes: {
+            notebookPageId: "page title#^abcdef",
+            notebookUuid,
+          },
         },
-      },
-    ],
-  })();
+      ],
+    },
+    { skipInverse: true }
+  )();
 });
 
 test("A cross app block reference", () => {
@@ -400,36 +422,149 @@ test(
 
 test(
   "Double page tags",
-  runTest("One [[page]] and two [[pages]]", {
-    content: `One ${String.fromCharCode(0)} and two ${String.fromCharCode(0)}\n`,
+  runTest(
+    "One [[page]] and two [[pages]]",
+    {
+      content: `One ${String.fromCharCode(0)} and two ${String.fromCharCode(
+        0
+      )}\n`,
+      annotations: [
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 16,
+          start: 0,
+          type: "block",
+        },
+        {
+          start: 4,
+          end: 5,
+          type: "reference",
+          attributes: {
+            notebookPageId: "page",
+            notebookUuid,
+          },
+        },
+        {
+          start: 14,
+          end: 15,
+          type: "reference",
+          attributes: {
+            notebookPageId: "pages",
+            notebookUuid,
+          },
+        },
+      ],
+    },
+    { skipInverse: true }
+  )
+);
+
+test(
+  "Odd number underscores",
+  runTest("Deal _with_ odd _underscores", {
+    content: "Deal with odd _underscores\n",
     annotations: [
       {
         attributes: {
           level: 1,
           viewType: "document",
         },
-        end: 16,
+        end: 27,
         start: 0,
         type: "block",
       },
-      {
-        start: 4,
-        end: 5,
-        type: "reference",
-        attributes: {
-          notebookPageId: "page",
-          notebookUuid,
+      { start: 5, end: 9, type: "italics" },
+    ],
+  })
+);
+
+test(
+  "Odd number asterisks",
+  runTest(
+    "Deal *with* odd *asterisks",
+    {
+      content: "Deal with odd *asterisks\n",
+      annotations: [
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 25,
+          start: 0,
+          type: "block",
         },
-      },
-      {
-        start: 14,
-        end: 15,
-        type: "reference",
-        attributes: {
-          notebookPageId: "pages",
-          notebookUuid,
+        { start: 5, end: 9, type: "italics" },
+      ],
+    },
+    { skipInverse: true }
+  )
+);
+
+test(
+  "Odd number double underscores",
+  runTest(
+    "Deal __with__ odd __underscores",
+    {
+      content: `Deal with odd __underscores\n`,
+      annotations: [
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 28,
+          start: 0,
+          type: "block",
         },
+        { start: 5, end: 9, type: "bold" },
+      ],
+    },
+    { skipInverse: true }
+  )
+);
+
+test(
+  "Odd number double asterisks",
+  runTest(
+    "Deal **with** odd **asterisks",
+    {
+      content: `Deal with odd **asterisks\n`,
+      annotations: [
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 26,
+          start: 0,
+          type: "block",
+        },
+        { start: 5, end: 9, type: "bold" },
+      ],
+    },
+    { skipInverse: true }
+  )
+);
+
+test(
+  "Odd number double tilde",
+  runTest("Deal ~~with~~ odd ~~tildes", {
+    content: `Deal with odd ~~tildes\n`,
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+        end: 23,
+        start: 0,
+        type: "block",
       },
+      { start: 5, end: 9, type: "strikethrough" },
     ],
   })
 );
