@@ -1,4 +1,9 @@
-import { compileLexer, DEFAULT_TOKENS } from "samepage/utils/atJsonTokens";
+import {
+  compileLexer,
+  DEFAULT_TOKENS,
+  createBoldToken as parentCreateBoldToken,
+  createItalicsToken as parentCreateItalicsToken,
+} from "samepage/utils/atJsonTokens";
 import nearley from "nearley";
 import { Annotation, InitialSchema } from "samepage/internal/types";
 import { disambiguateTokens as defaultDismabuagteTokens } from "samepage/utils/atJsonTokens";
@@ -36,6 +41,34 @@ export const createEmpty: Processor<InitialSchema> = (data) => {
 type InitialSchemaAugmented = InitialSchema & {
   tabs: number;
   viewType: "document" | "bullet" | "numbered";
+};
+
+export const createBoldToken: Processor<InitialSchema> = (data, _, reject) => {
+  const result = parentCreateBoldToken(data, _, reject);
+  if (result === reject) return reject;
+  const [bold] = (result as InitialSchema).annotations;
+  bold.appAttributes = {
+    obsidian: {
+      kind: (data as [moo.Token])[0].value,
+    },
+  };
+  return result;
+};
+
+export const createItalicsToken: Processor<InitialSchema> = (
+  data,
+  _,
+  reject
+) => {
+  const result = parentCreateItalicsToken(data, _, reject);
+  if (result === reject) return reject;
+  const [ital] = (result as InitialSchema).annotations;
+  ital.appAttributes = {
+    obsidian: {
+      kind: (data as [moo.Token])[0].value,
+    },
+  };
+  return result;
 };
 
 export const createBlockTokens: Processor<InitialSchema> = (

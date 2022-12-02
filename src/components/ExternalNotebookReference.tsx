@@ -10,13 +10,11 @@ export const references: Record<string, Record<string, InitialSchema>> = {};
 const ExternalNotebookReference = ({
   notebookUuid,
   notebookPageId,
-  plugin,
   isOpen,
   onClose,
 }: OverlayProps<{
   notebookUuid: string;
   notebookPageId: string;
-  plugin: SamePagePlugin;
 }>) => {
   const [data, setData] = useState<InitialSchema>(
     references[notebookUuid]?.[notebookPageId] || {
@@ -74,7 +72,7 @@ const ExternalNotebookReference = ({
       onClose={onClose}
     >
       <div className={`text-black ${Classes.DIALOG_BODY}`}>
-        {atJsonToObsidian(data, plugin)}
+        {atJsonToObsidian(data)}
       </div>
     </Dialog>
   );

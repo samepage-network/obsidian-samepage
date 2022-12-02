@@ -4,13 +4,13 @@
 
 @{%
 import {
-   createBoldToken,
-   createItalicsToken,
    createStrikethroughToken,
    createTextToken,
    createImageToken,
 } from "samepage/utils/atJsonTokens";
 import lexer, {
+   createBoldToken,
+   createItalicsToken,
    disambiguateTokens,
    createLinkToken,
    createBlockTokens,
@@ -22,7 +22,15 @@ import lexer, {
 
 @lexer lexer
 
-main -> (%tab:* tokens {% ([a,b]) => ({...b, tabs: a.length, viewType: "document"})%} | %tab:* %bullet tokens {% ([a,_,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} | %tab:* %numbered tokens {% ([a,_,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}) (%newLine %newLine %tab:* tokens {% ([_, __, a,b]) =>  ({...b, tabs: a.length, viewType: "document"})%} | %newLine %tab:* %bullet tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} | %newLine %tab:* %numbered tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}):* {% createBlockTokens %}
+main -> (
+    %tab:* tokens {% ([a,b]) => ({...b, tabs: a.length, viewType: "document"})%} 
+  | %tab:* %bullet tokens {% ([a,_,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} 
+  | %tab:* %numbered tokens {% ([a,_,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}
+  ) (
+   %newLine %newLine %tab:* tokens {% ([_, __, a,b]) =>  ({...b, tabs: a.length, viewType: "document"})%} 
+   | %newLine %tab:* %bullet tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} 
+   | %newLine %tab:* %numbered tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}
+  ):* {% createBlockTokens %}
 
 # document -> %tab:* tokens {% ([a,b]) =>  ({...b, tabs: a.length, viewType: "document"})%}
 

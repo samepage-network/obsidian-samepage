@@ -15,13 +15,10 @@ const applyState = async (
   state: Schema,
   plugin: SamePagePlugin
 ) => {
-  const expectedText = atJsonToObsidian(
-    {
-      content: state.content.toString(),
-      annotations: state.annotations,
-    },
-    plugin
-  );
+  const expectedText = atJsonToObsidian({
+    content: state.content.toString(),
+    annotations: state.annotations,
+  });
   const abstractFile = plugin.app.vault.getAbstractFileByPath(
     `${notebookPageId}.md`
   );

@@ -6,6 +6,7 @@ import type { InitialSchema } from "samepage/internal/types";
 import atJsonParser from "samepage/utils/atJsonParser";
 import { test, expect } from "@playwright/test";
 import { v4 } from "uuid";
+import setupRegistry from "samepage/internal/registry";
 
 const notebookUuid = v4();
 // @ts-ignore
@@ -31,9 +32,10 @@ const runTest =
     const output = atJsonParser(leafGrammar, md);
     expect(output).toBeTruthy();
     expect(output).toEqual(expected);
-    // Blocked on ending new lines issue
-    // if (!opts.skipInverse) expect(atJsonToObsidian(output)).toEqual(md);
+    if (!opts.skipInverse) expect(atJsonToObsidian(output)).toEqual(md);
   };
+
+test.beforeAll(() => setupRegistry({ app: 3, getSetting: () => notebookUuid }));
 
 test(
   "Hello World Example",
@@ -106,8 +108,18 @@ Some regular text to end.`,
           start: 120,
           type: "block",
         },
-        { type: "bold", start: 132, end: 136 },
-        { type: "italics", start: 140, end: 147 },
+        {
+          type: "bold",
+          start: 132,
+          end: 136,
+          appAttributes: { obsidian: { kind: "**" } },
+        },
+        {
+          type: "italics",
+          start: 140,
+          end: 147,
+          appAttributes: { obsidian: { kind: "*" } },
+        },
         { type: "strikethrough", start: 150, end: 156 },
         {
           attributes: {
@@ -309,33 +321,29 @@ test(
 );
 
 test("A normal block reference", () => {
-  runTest(
-    "A block [[page title#^abcdef]] to content",
-    {
-      content: `A block ${String.fromCharCode(0)} to content\n`,
-      annotations: [
-        {
-          start: 0,
-          end: 21,
-          type: "block",
-          attributes: {
-            viewType: "document",
-            level: 1,
-          },
+  runTest("A block [[page title#^abcdef]] to content", {
+    content: `A block ${String.fromCharCode(0)} to content\n`,
+    annotations: [
+      {
+        start: 0,
+        end: 21,
+        type: "block",
+        attributes: {
+          viewType: "document",
+          level: 1,
         },
-        {
-          start: 8,
-          end: 9,
-          type: "reference",
-          attributes: {
-            notebookPageId: "page title#^abcdef",
-            notebookUuid,
-          },
+      },
+      {
+        start: 8,
+        end: 9,
+        type: "reference",
+        attributes: {
+          notebookPageId: "page title#^abcdef",
+          notebookUuid,
         },
-      ],
-    },
-    { skipInverse: true }
-  )();
+      },
+    ],
+  })();
 });
 
 test("A cross app block reference", () => {
@@ -378,8 +386,18 @@ test(
         start: 0,
         type: "block",
       },
-      { start: 5, end: 9, type: "italics" },
-      { start: 14, end: 18, type: "italics" },
+      {
+        start: 5,
+        end: 9,
+        type: "italics",
+        appAttributes: { obsidian: { kind: "_" } },
+      },
+      {
+        start: 14,
+        end: 18,
+        type: "italics",
+        appAttributes: { obsidian: { kind: "_" } },
+      },
     ],
   })
 );
@@ -422,44 +440,40 @@ test(
 
 test(
   "Double page tags",
-  runTest(
-    "One [[page]] and two [[pages]]",
-    {
-      content: `One ${String.fromCharCode(0)} and two ${String.fromCharCode(
-        0
-      )}\n`,
-      annotations: [
-        {
-          attributes: {
-            level: 1,
-            viewType: "document",
-          },
-          end: 16,
-          start: 0,
-          type: "block",
+  runTest("One [[page]] and two [[pages]]", {
+    content: `One ${String.fromCharCode(0)} and two ${String.fromCharCode(
+      0
+    )}\n`,
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
         },
-        {
-          start: 4,
-          end: 5,
-          type: "reference",
-          attributes: {
-            notebookPageId: "page",
-            notebookUuid,
-          },
+        end: 16,
+        start: 0,
+        type: "block",
+      },
+      {
+        start: 4,
+        end: 5,
+        type: "reference",
+        attributes: {
+          notebookPageId: "page",
+          notebookUuid,
         },
-        {
-          start: 14,
-          end: 15,
-          type: "reference",
-          attributes: {
-            notebookPageId: "pages",
-            notebookUuid,
-          },
+      },
+      {
+        start: 14,
+        end: 15,
+        type: "reference",
+        attributes: {
+          notebookPageId: "pages",
+          notebookUuid,
         },
-      ],
-    },
-    { skipInverse: true }
-  )
+      },
+    ],
+  })
 );
 
 test(
@@ -476,78 +490,86 @@ test(
         start: 0,
         type: "block",
       },
-      { start: 5, end: 9, type: "italics" },
+      {
+        start: 5,
+        end: 9,
+        type: "italics",
+        appAttributes: { obsidian: { kind: "_" } },
+      },
     ],
   })
 );
 
 test(
   "Odd number asterisks",
-  runTest(
-    "Deal *with* odd *asterisks",
-    {
-      content: "Deal with odd *asterisks\n",
-      annotations: [
-        {
-          attributes: {
-            level: 1,
-            viewType: "document",
-          },
-          end: 25,
-          start: 0,
-          type: "block",
+  runTest("Deal *with* odd *asterisks", {
+    content: "Deal with odd *asterisks\n",
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
         },
-        { start: 5, end: 9, type: "italics" },
-      ],
-    },
-    { skipInverse: true }
-  )
+        end: 25,
+        start: 0,
+        type: "block",
+      },
+      {
+        start: 5,
+        end: 9,
+        type: "italics",
+        appAttributes: { obsidian: { kind: "*" } },
+      },
+    ],
+  })
 );
 
 test(
   "Odd number double underscores",
-  runTest(
-    "Deal __with__ odd __underscores",
-    {
-      content: `Deal with odd __underscores\n`,
-      annotations: [
-        {
-          attributes: {
-            level: 1,
-            viewType: "document",
-          },
-          end: 28,
-          start: 0,
-          type: "block",
+  runTest("Deal __with__ odd __underscores", {
+    content: `Deal with odd __underscores\n`,
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
         },
-        { start: 5, end: 9, type: "bold" },
-      ],
-    },
-    { skipInverse: true }
-  )
+        end: 28,
+        start: 0,
+        type: "block",
+      },
+      {
+        start: 5,
+        end: 9,
+        type: "bold",
+        appAttributes: { obsidian: { kind: "__" } },
+      },
+    ],
+  })
 );
 
 test(
   "Odd number double asterisks",
-  runTest(
-    "Deal **with** odd **asterisks",
-    {
-      content: `Deal with odd **asterisks\n`,
-      annotations: [
-        {
-          attributes: {
-            level: 1,
-            viewType: "document",
-          },
-          end: 26,
-          start: 0,
-          type: "block",
+  runTest("Deal **with** odd **asterisks", {
+    content: `Deal with odd **asterisks\n`,
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
         },
-        { start: 5, end: 9, type: "bold" },
-      ],
-    },
-    { skipInverse: true }
-  )
+        end: 26,
+        start: 0,
+        type: "block",
+      },
+      {
+        start: 5,
+        end: 9,
+        type: "bold",
+        appAttributes: { obsidian: { kind: "**" } },
+      },
+    ],
+  })
 );
 
 test(
@@ -571,25 +593,26 @@ test(
 
 test(
   "Underscore within bold underscores",
-  runTest(
-    "__hello_world__",
-    {
-      content: "hello_world\n",
-      annotations: [
-        {
-          attributes: {
-            level: 1,
-            viewType: "document",
-          },
-          end: 12,
-          start: 0,
-          type: "block",
+  runTest("__hello_world__", {
+    content: "hello_world\n",
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
         },
-        { end: 11, start: 0, type: "bold" },
-      ],
-    },
-    { skipInverse: true }
-  )
+        end: 12,
+        start: 0,
+        type: "block",
+      },
+      {
+        end: 11,
+        start: 0,
+        type: "bold",
+        appAttributes: { obsidian: { kind: "__" } },
+      },
+    ],
+  })
 );
 
 test(
@@ -606,7 +629,12 @@ test(
         start: 0,
         type: "block",
       },
-      { end: 11, start: 0, type: "bold" },
+      {
+        end: 11,
+        start: 0,
+        type: "bold",
+        appAttributes: { obsidian: { kind: "**" } },
+      },
     ],
   })
 );
