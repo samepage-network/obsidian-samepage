@@ -1,48 +1,60 @@
+import { getSetting } from "samepage/internal/registry";
 import type { InitialSchema } from "samepage/internal/types";
 import renderAtJson from "samepage/utils/renderAtJson";
-import type { default as SamePagePlugin } from "../main";
 
-const atJsonToObsidian = (state: InitialSchema, plugin?: SamePagePlugin) =>
-  renderAtJson({
+const atJsonToObsidian = (state: InitialSchema) => {
+  const firstBlockIndex = state.annotations.findIndex(
+    (a) => a.type === "block"
+  );
+  return renderAtJson({
     state: {
       annotations: state.annotations,
       content: state.content.toString(),
     },
     applyAnnotation: {
-      bold: (_, content) => ({
-        prefix: "**",
-        suffix: `**`,
+      bold: ({ content, appAttributes }) => ({
+        prefix: appAttributes?.kind || "**",
+        suffix: appAttributes?.kind || `**`,
         replace: content === String.fromCharCode(0),
       }),
-      italics: (_, content) => ({
-        prefix: "_",
-        suffix: `_`,
+      italics: ({ content, appAttributes }) => ({
+        prefix: appAttributes?.kind || "_",
+        suffix: appAttributes?.kind || `_`,
         replace: content === String.fromCharCode(0),
       }),
-      strikethrough: (_, content) => ({
+      strikethrough: ({ content }) => ({
         prefix: "~~",
         suffix: `~~`,
         replace: content === String.fromCharCode(0),
       }),
-      link: ({ href }) => ({
+      link: ({ attributes: { href } }) => ({
         prefix: "[",
         suffix: `](${href})`,
       }),
-      image: ({ src }, content) => ({
+      image: ({ attributes: { src }, content }) => ({
         prefix: "![",
         suffix: `](${src})`,
         replace: content === String.fromCharCode(0),
       }),
-      block: ({ level, viewType }) => ({
-        suffix: viewType === "document" ? "\n" : "",
-        prefix: `${"".padStart(level - 1, "\t")}${
-          viewType === "bullet" ? "- " : viewType === "numbered" ? "1. " : ""
-        }`,
-      }),
-      reference: ({ notebookPageId, notebookUuid }, content) => ({
+      block: ({ attributes: { level, viewType }, content, index }) => {
+        const firstBlock = firstBlockIndex === index;
+        return {
+          suffix: content.replace(/\n$/, ""),
+          prefix: `${firstBlock ? "" : "\n"}${
+            firstBlock || viewType !== "document" ? "" : "\n"
+          }${"".padStart(level - 1, "\t")}${
+            viewType === "bullet" ? "- " : viewType === "numbered" ? "1. " : ""
+          }`,
+          replace: true,
+        };
+      },
+      reference: ({
+        attributes: { notebookPageId, notebookUuid },
+        content,
+      }) => ({
         prefix: "[[",
         suffix: `${
-          notebookUuid === plugin?.data?.settings?.["uuid"]
+          notebookUuid === getSetting("uuid")
             ? notebookPageId
             : `${notebookUuid}:${notebookPageId}`
         }]]`,
@@ -50,5 +62,6 @@ const atJsonToObsidian = (state: InitialSchema, plugin?: SamePagePlugin) =>
       }),
     },
   });
+};
 
 export default atJsonToObsidian;

@@ -7,7 +7,6 @@ import type SamePagePlugin from "../main";
 import createHTMLObserver from "samepage/utils/createHTMLObserver";
 import ExternalNotebookReference from "../components/ExternalNotebookReference";
 import renderOverlay from "../utils/renderOverlay";
-import { v4 } from "uuid";
 
 const setup = (plugin: SamePagePlugin) => {
   const { unload } = setupNotebookQuerying({
@@ -46,7 +45,7 @@ const setup = (plugin: SamePagePlugin) => {
           const listener = (e: MouseEvent) => {
             renderOverlay({
               Overlay: ExternalNotebookReference,
-              props: { notebookPageId, notebookUuid, plugin },
+              props: { notebookPageId, notebookUuid },
             });
             e.preventDefault();
             e.stopPropagation();
