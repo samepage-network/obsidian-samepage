@@ -4,10 +4,9 @@ import atJsonParser from "samepage/utils/atJsonParser";
 // @ts-ignore figure this out later - it compiles at least
 import leafGrammar from "../utils/leafGrammar.ne";
 import type SamePagePlugin from "../main";
-import { EventRef, MarkdownView, TFile } from "obsidian";
+import { EventRef, Keymap, MarkdownView, TFile } from "obsidian";
 import Automerge from "automerge";
 import { v4 } from "uuid";
-import renderAtJson from "samepage/utils/renderAtJson";
 import atJsonToObsidian from "../utils/atJsonToObsidian";
 
 const applyState = async (
@@ -76,7 +75,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       viewSharedPageProps: {
         onLinkClick: (title, e) => {
           if (e.shiftKey) {
-            app.workspace.getLeaf("split", "vertical");
+            app.workspace.getLeaf(Keymap.isModEvent(e));
           } else {
             app.workspace.openLinkText(title, title);
           }
@@ -161,7 +160,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       }
     }
   };
-  plugin.registerDomEvent(document.body, "keydown", bodyKeyDownListener);
+  plugin.registerDomEvent(window, "keydown", bodyKeyDownListener);
   const bodyPasteListener = (e: ClipboardEvent) => {
     const el = e.target as HTMLElement;
     const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
@@ -176,6 +175,10 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
     }
   };
   plugin.registerDomEvent(document.body, "paste", bodyPasteListener);
+  plugin.app.workspace.on("window-open", (w) =>
+    plugin.registerDomEvent(w.win.document.body, "paste", bodyPasteListener)
+  );
+  plugin.app.vault.on("modify", console.log);
   return () => {
     clearRefreshRef();
     unload();

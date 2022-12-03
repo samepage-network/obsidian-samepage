@@ -105,7 +105,7 @@ class SamePagePlugin extends Plugin {
         else {
           checkCallback[label] = true;
           self.addCommand({
-            id: label.toLowerCase().replace(/ /g, "-"),
+            id: label,
             name: label,
             checkCallback: (checking) => {
               if (checkCallback[label]) {
