@@ -28,9 +28,11 @@
   },
   "homepage": "https://github.com/samepage-network/obsidian-samepage#readme",
   "devDependencies": {
+    "@types/crypto-js": "^4.1.1",
     "obsidian": "^0.16.0"
   },
   "dependencies": {
+    "crypto-js": "^4.1.1",
     "samepage": "^0.32.3"
   }
 }

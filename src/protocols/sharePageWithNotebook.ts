@@ -8,6 +8,11 @@ import { EventRef, Keymap, MarkdownView, TFile } from "obsidian";
 import Automerge from "automerge";
 import { v4 } from "uuid";
 import atJsonToObsidian from "../utils/atJsonToObsidian";
+import sha256 from "crypto-js/sha256";
+
+const hashes: Record<number, string> = {};
+
+const hashFn = (s: string) => sha256(s).toString();
 
 const applyState = async (
   notebookPageId: string,
@@ -22,8 +27,11 @@ const applyState = async (
     `${notebookPageId}.md`
   );
   if (abstractFile instanceof TFile) {
+    const hash = hashFn(expectedText);
+    const mtime = new Date().valueOf();
+    hashes[mtime] = hash;
     return plugin.app.vault
-      .modify(abstractFile, expectedText)
+      .modify(abstractFile, expectedText, { mtime })
       .then(() => plugin.save());
   }
 };
@@ -119,20 +127,21 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
     },
   });
 
-  let refreshRef: EventRef | undefined;
-  const clearRefreshRef = () => {
-    if (refreshRef) {
-      plugin.app.vault.offref(refreshRef);
-      refreshRef = undefined;
-    }
-  };
-  const refreshState = (notebookPageId: string, label: string) => {
-    refreshRef = plugin.app.vault.on("modify", async () => {
-      clearRefreshRef();
+  plugin.app.vault.on("modify", async (file) => {
+    if (file instanceof TFile) {
+      if (
+        hashes[file.stat.mtime] ===
+        hashFn(await plugin.app.vault.cachedRead(file))
+      ) {
+        delete hashes[file.stat.mtime];
+        console.log("SamePage!");
+        return;
+      }
+      const notebookPageId = file.path.replace(/\.md$/, "");
       const doc = await calculateState(notebookPageId, plugin);
       updatePage({
         notebookPageId,
-        label,
+        label: "Modify",
         callback: (oldDoc) => {
           oldDoc.content.deleteAt?.(0, oldDoc.content.length);
           oldDoc.content.insertAt?.(0, ...new Automerge.Text(doc.content));
@@ -141,48 +150,9 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
           doc.annotations.forEach((a) => oldDoc.annotations.push(a));
         },
       });
-    });
-  };
-  const bodyKeyDownListener = async (e: KeyboardEvent) => {
-    const el = e.target as HTMLElement;
-    const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!view) {
-      // no-op
-    } else if (e.metaKey) {
-      // no-op
-    } else if (/^Arrow/.test(e.key)) {
-      // no-op
-    } else if (el.tagName === "DIV" && el.classList.contains("cm-content")) {
-      const notebookPageId = getCurrentNotebookPageId(plugin);
-      if (notebookPageId && isShared(notebookPageId)) {
-        clearRefreshRef();
-        refreshState(notebookPageId, `Key Presses - ${e.key}`);
-      }
     }
-  };
-  plugin.registerDomEvent(window, "keydown", bodyKeyDownListener);
-  const bodyPasteListener = (e: ClipboardEvent) => {
-    const el = e.target as HTMLElement;
-    const view = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!view) {
-      // no-op
-    } else if (el.tagName === "DIV" && el.classList.contains("cm-content")) {
-      const notebookPageId = getCurrentNotebookPageId(plugin);
-      if (notebookPageId && isShared(notebookPageId)) {
-        clearRefreshRef();
-        refreshState(notebookPageId, "Paste");
-      }
-    }
-  };
-  plugin.registerDomEvent(document.body, "paste", bodyPasteListener);
-  plugin.app.workspace.on("window-open", (w) =>
-    plugin.registerDomEvent(w.win.document.body, "paste", bodyPasteListener)
-  );
-  plugin.app.vault.on("modify", console.log);
-  return () => {
-    clearRefreshRef();
-    unload();
-  };
+  });
+  return unload;
 };
 
 export default setupSharePageWithNotebook;
