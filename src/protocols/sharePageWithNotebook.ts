@@ -135,7 +135,6 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
         hashFn(await plugin.app.vault.cachedRead(file))
       ) {
         delete hashes[file.stat.mtime];
-        console.log("SamePage!");
         return;
       }
       const doc = await calculateState(notebookPageId, plugin);
