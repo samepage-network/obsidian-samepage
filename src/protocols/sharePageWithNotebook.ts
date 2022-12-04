@@ -127,30 +127,32 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
     },
   });
 
-  plugin.app.vault.on("modify", async (file) => {
-    const notebookPageId = file.path.replace(/\.md$/, "");
-    if (file instanceof TFile && isShared(notebookPageId)) {
-      if (
-        hashes[file.stat.mtime] ===
-        hashFn(await plugin.app.vault.cachedRead(file))
-      ) {
-        delete hashes[file.stat.mtime];
-        return;
+  plugin.registerEvent(
+    plugin.app.vault.on("modify", async (file) => {
+      const notebookPageId = file.path.replace(/\.md$/, "");
+      if (file instanceof TFile && isShared(notebookPageId)) {
+        if (
+          hashes[file.stat.mtime] ===
+          hashFn(await plugin.app.vault.cachedRead(file))
+        ) {
+          delete hashes[file.stat.mtime];
+          return;
+        }
+        const doc = await calculateState(notebookPageId, plugin);
+        updatePage({
+          notebookPageId,
+          label: "Modify",
+          callback: (oldDoc) => {
+            oldDoc.content.deleteAt?.(0, oldDoc.content.length);
+            oldDoc.content.insertAt?.(0, ...new Automerge.Text(doc.content));
+            if (!oldDoc.annotations) oldDoc.annotations = [];
+            oldDoc.annotations.splice(0, oldDoc.annotations.length);
+            doc.annotations.forEach((a) => oldDoc.annotations.push(a));
+          },
+        });
       }
-      const doc = await calculateState(notebookPageId, plugin);
-      updatePage({
-        notebookPageId,
-        label: "Modify",
-        callback: (oldDoc) => {
-          oldDoc.content.deleteAt?.(0, oldDoc.content.length);
-          oldDoc.content.insertAt?.(0, ...new Automerge.Text(doc.content));
-          if (!oldDoc.annotations) oldDoc.annotations = [];
-          oldDoc.annotations.splice(0, oldDoc.annotations.length);
-          doc.annotations.forEach((a) => oldDoc.annotations.push(a));
-        },
-      });
-    }
-  });
+    })
+  );
   return unload;
 };
 
