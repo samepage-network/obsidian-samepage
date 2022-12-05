@@ -1,4 +1,5 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
+import type { App } from "obsidian";
 import defaultSettings, {
   DefaultSetting,
 } from "samepage/utils/defaultSettings";
@@ -27,7 +28,7 @@ class SamePageSettingTab extends PluginSettingTab {
       const setting = new Setting(containerEl)
         .setName(s.name)
         .setDesc(s.description);
-     /* if (s.type === "boolean") {
+      /* if (s.type === "boolean") {
         setting.addToggle((toggle) => {
           const saved = this.plugin.data.settings[s.id];
           toggle
@@ -95,7 +96,7 @@ class SamePagePlugin extends Plugin {
         // TODO - fix this typing
         if (defaultTypeById[s] === "string")
           this.data.settings[s as "uuid" | "token"] = v;
-       /* else if (defaultTypeById[s] === "boolean")
+        /* else if (defaultTypeById[s] === "boolean")
           this.data.settings[s] =
             v === "true";*/
         this.save();

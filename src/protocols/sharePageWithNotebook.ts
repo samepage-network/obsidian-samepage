@@ -1,4 +1,8 @@
-import type { Schema } from "samepage/internal/types";
+import type {
+  Annotation,
+  InitialSchema,
+  Schema,
+} from "samepage/internal/types";
 import loadSharePageWithNotebook from "samepage/protocols/sharePageWithNotebook";
 import atJsonParser from "samepage/utils/atJsonParser";
 // @ts-ignore figure this out later - it compiles at least
@@ -9,6 +13,9 @@ import Automerge from "automerge";
 import { v4 } from "uuid";
 import atJsonToObsidian from "../utils/atJsonToObsidian";
 import sha256 from "crypto-js/sha256";
+import { has as isShared } from "samepage/utils/localAutomergeDb";
+import { renderOverlay } from "samepage/internal/registry";
+import SharedPageStatus from "samepage/components/SharedPageStatus";
 
 const hashes: Record<number, string> = {};
 
@@ -16,7 +23,7 @@ const hashFn = (s: string) => sha256(s).toString();
 
 const applyState = async (
   notebookPageId: string,
-  state: Schema,
+  state: InitialSchema,
   plugin: SamePagePlugin
 ) => {
   const expectedText = atJsonToObsidian({
@@ -55,7 +62,7 @@ const getCurrentNotebookPageId = (plugin: SamePagePlugin) =>
   (plugin.app.workspace.getActiveFile()?.path || "")?.replace(/\.md$/, "");
 
 const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
-  const { unload, isShared, updatePage } = loadSharePageWithNotebook({
+  const { unload, refreshContent } = loadSharePageWithNotebook({
     applyState: (id, state) => applyState(id, state, plugin),
     calculateState: (id) => calculateState(id, plugin),
     getCurrentNotebookPageId: async () => getCurrentNotebookPageId(plugin),
@@ -92,41 +99,40 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
           app.vault.create(title, "").then((f) => f.path.replace(/\.md$/, "")),
       },
       sharedPageStatusProps: {
-        selector: ".workspace-leaf div.inline-title",
+        ignoreObserver: true,
         getPath: (el) => {
-          const workleafRoot =
-            el.parentElement &&
-            el.parentElement.closest<HTMLElement>(".workspace-leaf");
-          if (workleafRoot) {
+          if (el) {
             const sel = v4();
-            workleafRoot.setAttribute("data-samepage-shared", sel);
+            (el as HTMLElement).setAttribute("data-samepage-shared", sel);
             return `div[data-samepage-shared="${sel}"] .cm-contentContainer`;
           }
           return null;
         },
-        getHtmlElement: async (title) =>
-          Array.from(
-            document.querySelectorAll<HTMLHeadingElement>(
-              ".workspace-leaf div.inline-title"
-            )
-          )
-            .map((el) =>
-              (el.nodeName === "DIV" ? (el as HTMLElement) : el.parentElement)
-                ?.closest(`.workspace-leaf-content`)
-                ?.querySelector<HTMLDivElement>(
-                  "div.view-header-title-container"
-                )
-            )
-            .find((h) => h?.textContent === title) || undefined,
-        getNotebookPageId: async (el) =>
-          (el.nodeName === "DIV" ? (el as HTMLElement) : el.parentElement)
-            ?.closest(`.workspace-leaf-content`)
-            ?.querySelector(".view-header-title-container")?.textContent ||
-          null,
+        getHtmlElement: async () =>
+          plugin.app.workspace.getActiveViewOfType(MarkdownView)?.containerEl,
       },
     },
   });
+  plugin.app.workspace.on("file-open", (tfile) => {
+    if (!tfile) return;
+    const notebookPageId = tfile.path.replace(/\.md$/, "");
+    if (isShared(notebookPageId)) {
+      const workleaf = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+      if (workleaf && workleaf.file.path === tfile.path) {
+        const sel = v4();
+        workleaf.containerEl.setAttribute("data-samepage-shared", sel);
 
+        renderOverlay({
+          id: `samepage-shared-${notebookPageId.replace(/[^\w_-]/g, "")}`,
+          Overlay: SharedPageStatus,
+          props: {
+            notebookPageId,
+          },
+          path: `div[data-samepage-shared="${sel}"] .cm-contentContainer`,
+        });
+      }
+    }
+  });
   plugin.registerEvent(
     plugin.app.vault.on("modify", async (file) => {
       const notebookPageId = file.path.replace(/\.md$/, "");
@@ -138,18 +144,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
           delete hashes[file.stat.mtime];
           return;
         }
-        const doc = await calculateState(notebookPageId, plugin);
-        updatePage({
-          notebookPageId,
-          label: "Modify",
-          callback: (oldDoc) => {
-            oldDoc.content.deleteAt?.(0, oldDoc.content.length);
-            oldDoc.content.insertAt?.(0, ...new Automerge.Text(doc.content));
-            if (!oldDoc.annotations) oldDoc.annotations = [];
-            oldDoc.annotations.splice(0, oldDoc.annotations.length);
-            doc.annotations.forEach((a) => oldDoc.annotations.push(a));
-          },
-        });
+        refreshContent({ notebookPageId });
       }
     })
   );

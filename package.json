@@ -6,7 +6,7 @@
   "scripts": {
     "postversion": "node scripts/postversion.js",
     "start": "node scripts/start.js",
-    "pretest": "npx nearleyc src/utils/leafGrammar.ne --out src/utils/leafGrammar.ts",
+    "pretest": "node scripts/pretest.js",
     "test": "node scripts/test.js"
   },
   "repository": {
@@ -33,6 +33,6 @@
   },
   "dependencies": {
     "crypto-js": "^4.1.1",
-    "samepage": "^0.32.3"
+    "samepage": "^0.36.0"
   }
 }

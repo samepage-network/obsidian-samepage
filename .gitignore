@@ -1,3 +1,5 @@
 node_modules
 dist
 src/utils/leafGrammar.ts
+*.ne.ts
+coverage

@@ -1,4 +1,3 @@
-// TODO make this test friendly - https://github.com/microsoft/playwright/issues/17852
 import leafGrammar from "../src/utils/leafGrammar";
 import atJsonToObsidian from "../src/utils/atJsonToObsidian";
 import lexer from "../src/utils/leafLexer";
