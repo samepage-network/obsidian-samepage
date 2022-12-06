@@ -33,6 +33,6 @@
   },
   "dependencies": {
     "crypto-js": "^4.1.1",
-    "samepage": "^0.36.1"
+    "samepage": "^0.37.1"
   }
 }

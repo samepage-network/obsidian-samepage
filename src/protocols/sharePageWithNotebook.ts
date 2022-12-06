@@ -9,12 +9,13 @@ import atJsonParser from "samepage/utils/atJsonParser";
 import leafGrammar from "../utils/leafGrammar.ne";
 import type SamePagePlugin from "../main";
 import { EventRef, Keymap, MarkdownView, TFile } from "obsidian";
-import Automerge from "automerge";
+import renderOverlay from "../utils/renderOverlay";
 import { v4 } from "uuid";
 import atJsonToObsidian from "../utils/atJsonToObsidian";
 import sha256 from "crypto-js/sha256";
-import { has as isShared } from "samepage/utils/localAutomergeDb";
-import { renderOverlay } from "samepage/internal/registry";
+import notebookPageIds, {
+  has as isShared,
+} from "samepage/utils/localAutomergeDb";
 import SharedPageStatus from "samepage/components/SharedPageStatus";
 
 const hashes: Record<number, string> = {};
@@ -61,7 +62,10 @@ const calculateState = async (
 const getCurrentNotebookPageId = (plugin: SamePagePlugin) =>
   (plugin.app.workspace.getActiveFile()?.path || "")?.replace(/\.md$/, "");
 
+const sharedPagePaths: Record<string, string> = {};
+
 const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
+  const unloads: Record<string, (() => void) | undefined> = {};
   const { unload, refreshContent } = loadSharePageWithNotebook({
     applyState: (id, state) => applyState(id, state, plugin),
     calculateState: (id) => calculateState(id, plugin),
@@ -99,39 +103,34 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
           app.vault.create(title, "").then((f) => f.path.replace(/\.md$/, "")),
       },
       sharedPageStatusProps: {
-        ignoreObserver: true,
-        getPath: (el) => {
-          if (el) {
+        getPaths: (notebookPageId) => {
+          const leaf = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+          if (leaf && leaf.file.path.replace(/\.md/, "") === notebookPageId) {
             const sel = v4();
-            (el as HTMLElement).setAttribute("data-samepage-shared", sel);
-            return `div[data-samepage-shared="${sel}"] .cm-contentContainer`;
+            leaf.containerEl.setAttribute("data-samepage-shared", sel);
+            sharedPagePaths[sel] = notebookPageId;
+            return [`div[data-samepage-shared="${sel}"] .cm-contentContainer`];
           }
-          return null;
+          return [];
         },
-        getHtmlElement: async () =>
-          plugin.app.workspace.getActiveViewOfType(MarkdownView)?.containerEl,
+        observer({ onload, onunload }) {
+          const ref = plugin.app.workspace.on("active-leaf-change", (leaf) => {
+            if (!leaf) return;
+            const { view } = leaf;
+            if (!(view instanceof MarkdownView)) return;
+            const notebookPageId = view.file.path.replace(/\.md$/, "");
+            const sel = view.containerEl.getAttribute("data-samepage-shared");
+            if (sel) {
+              const existingNotebookPageId = sharedPagePaths[sel];
+              if (existingNotebookPageId === notebookPageId) return;
+              if (existingNotebookPageId) onunload(existingNotebookPageId);
+            }
+            onload(notebookPageId);
+          });
+          return () => plugin.app.workspace.offref(ref);
+        },
       },
     },
-  });
-  plugin.app.workspace.on("file-open", (tfile) => {
-    if (!tfile) return;
-    const notebookPageId = tfile.path.replace(/\.md$/, "");
-    if (isShared(notebookPageId)) {
-      const workleaf = plugin.app.workspace.getActiveViewOfType(MarkdownView);
-      if (workleaf && workleaf.file.path === tfile.path) {
-        const sel = v4();
-        workleaf.containerEl.setAttribute("data-samepage-shared", sel);
-
-        renderOverlay({
-          id: `samepage-shared-${notebookPageId.replace(/[^\w_-]/g, "")}`,
-          Overlay: SharedPageStatus,
-          props: {
-            notebookPageId,
-          },
-          path: `div[data-samepage-shared="${sel}"] .cm-contentContainer`,
-        });
-      }
-    }
   });
   plugin.registerEvent(
     plugin.app.vault.on("modify", async (file) => {
@@ -148,7 +147,10 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       }
     })
   );
-  return unload;
+  return () => {
+    Object.values(unloads).forEach((u) => u?.());
+    unload();
+  };
 };
 
 export default setupSharePageWithNotebook;
