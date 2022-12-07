@@ -637,3 +637,34 @@ test(
     ],
   })
 );
+
+test(
+  "Extra new line at end of bullet",
+  runTest(
+    "So this is a test share page.\n\n- So how does this work\n- And this\n\n",
+    {
+      content:
+        "So this is a test share page.\n\nSo how does this work\nAnd this\n\n",
+      annotations: [
+        {
+          type: "block",
+          start: 0,
+          end: 30,
+          attributes: { viewType: "document", level: 1 },
+        },
+        {
+          type: "block",
+          start: 30,
+          end: 51,
+          attributes: { viewType: "bullet", level: 1 },
+        },
+        {
+          type: "block",
+          start: 51,
+          end: 61,
+          attributes: { viewType: "document", level: 1 },
+        },
+      ],
+    }
+  )
+);

@@ -34,6 +34,6 @@
   "dependencies": {
     "axios": "^0.27.2",
     "crypto-js": "^4.1.1",
-    "samepage": "^0.37.1"
+    "samepage": "^0.37.3"
   }
 }
