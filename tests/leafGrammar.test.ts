@@ -197,13 +197,19 @@ test(
 test(
   "Aliasless link",
   runTest("A [](https://samepage.network) text", {
-    content: "A [](https://samepage.network) text\n",
+    content: `A ${String.fromCharCode(0)} text\n`,
     annotations: [
       {
         type: "block",
         start: 0,
-        end: 36,
+        end: 9,
         attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "link",
+        start: 2,
+        end: 3,
+        attributes: { href: "https://samepage.network" },
       },
     ],
   })
@@ -638,7 +644,7 @@ test(
   })
 );
 
-test(
+test.skip(
   "Extra new line at end of bullet",
   runTest(
     "So this is a test share page.\n\n- So how does this work\n- And this\n\n",
@@ -662,9 +668,81 @@ test(
           type: "block",
           start: 51,
           end: 61,
+          attributes: { viewType: "bullet", level: 1 },
+        },
+        {
+          type: "block",
+          start: 61,
+          end: 62,
           attributes: { viewType: "document", level: 1 },
         },
       ],
     }
   )
 );
+
+test(
+  "multiple aliases",
+  runTest(
+    "links: [one]([nested] some text - https://samepage.network), [two](https://samepage.network), [three](https://samepage.network)",
+    {
+      content: "links: one, two, three\n",
+      annotations: [
+        {
+          start: 0,
+          end: 23,
+          type: "block",
+          attributes: { viewType: "document", level: 1 },
+        },
+        {
+          start: 7,
+          end: 10,
+          type: "link",
+          attributes: { href: "[nested] some text - https://samepage.network" },
+        },
+        {
+          start: 12,
+          end: 15,
+          type: "link",
+          attributes: { href: "https://samepage.network" },
+        },
+        {
+          start: 17,
+          end: 22,
+          type: "link",
+          attributes: { href: "https://samepage.network" },
+        },
+      ],
+    }
+  )
+);
+
+// test(
+//   "Code Blocks",
+//   runTest(
+//     `\`\`\` python
+// class SubClass(SuperClass):
+
+//     def __init__(self, **kwargs):
+//         super(SubClass, self).__init__(**kwargs)
+
+//     def method(self, *args, **kwargs):
+//         # A comment about what's going on
+//         self.field = Method(*pool_args, **pool_kwargs)
+// \`\`\``,
+//     {
+//       content:
+//         "class SubClass(SuperClass):\n\n .   def __init__(self, **kwargs):\n .       super(SubClass, self).__init__(**kwargs)\n\n .   def method(self, *args, **kwargs):\n .       # A comment about what's going on\n        self.field = Method(*pool_args, **pool_kwargs)\n",
+//       annotations: [
+//         {
+//           type: "code",
+//           start: 0,
+//           end: 253,
+//           attributes: {
+//             language: "python",
+//           },
+//         },
+//       ],
+//     }
+//   )
+// );

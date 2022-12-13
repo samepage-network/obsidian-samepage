@@ -12,11 +12,12 @@ import lexer, {
    createBoldToken,
    createItalicsToken,
    disambiguateTokens,
-   createLinkToken,
    createBlockTokens,
    createEmpty,
    createReferenceToken,
    createNull,
+   createAssetToken,
+   createAliasToken,
 } from "./leafLexer";
 %}
 
@@ -41,7 +42,8 @@ token -> %openDoubleTilde (tokens {% id %} | null {% createNull %}) (%strike | %
    | %openDoubleStar (tokens {% id %} | null {% createNull %}) (%boldStar | %openDoubleStar)  {% createBoldToken %}
    | %openUnder tokens (%under | %openUnder) {% createItalicsToken %}
    | %openStar tokens (%star | %openStar) {% createItalicsToken %}
-   | %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createLinkToken %}
+   | %alias {% createAliasToken %}
+   | %asset {% createAssetToken %}
    | %exclamationMark %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createImageToken %}
    | %reference {% createReferenceToken %}
    | %text {% createTextToken %}

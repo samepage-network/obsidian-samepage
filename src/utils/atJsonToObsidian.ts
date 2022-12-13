@@ -27,9 +27,10 @@ const atJsonToObsidian = (state: InitialSchema) => {
         suffix: `~~`,
         replace: content === String.fromCharCode(0),
       }),
-      link: ({ attributes: { href } }) => ({
+      link: ({ attributes: { href } , content}) => ({
         prefix: "[",
         suffix: `](${href})`,
+        replace: content === String.fromCharCode(0),
       }),
       image: ({ attributes: { src }, content }) => ({
         prefix: "![",

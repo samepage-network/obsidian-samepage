@@ -11,6 +11,8 @@ import { getSetting } from "samepage/internal/registry";
 
 const lexer = compileLexer(
   {
+    alias: /\[[^\]]*\]\([^\)]*\)/,
+    asset: /!\[[^\]]*\]\([^\)]*\)/,
     url: DEFAULT_TOKENS.url,
     reference: /\[\[[^\]]+\]\]/,
     bullet: { match: /- / },
@@ -140,29 +142,55 @@ export const disambiguateTokens: Processor<InitialSchema> = (
   return defaultDismabuagteTokens(data, _, reject);
 };
 
-export const createLinkToken: Processor<InitialSchema> = (_data, _, reject) => {
-  const data = _data as [
-    moo.Token,
-    InitialSchema,
-    moo.Token,
-    moo.Token,
-    moo.Token,
-    moo.Token
-  ];
-  const { content, annotations = [] } = data[1];
-  if (!content) return reject;
+export const createAliasToken: Processor<InitialSchema> = (data) => {
+  const { value } = (data as [moo.Token])[0];
+  const arr = /\[([^\]]*)\]\(([^\)]*)\)/.exec(value);
+  if (!arr) {
+    return {
+      content: "",
+      annotations: [],
+    };
+  }
+  const [_, _content, href] = arr;
+  const content = _content || String.fromCharCode(0);
   return {
     content,
     annotations: [
       {
-        type: "link",
         start: 0,
         end: content.length,
+        type: "link",
         attributes: {
-          href: data[4].text,
+          href,
         },
-      } as Annotation,
-    ].concat(annotations),
+      },
+    ],
+  };
+};
+
+export const createAssetToken: Processor<InitialSchema> = (data) => {
+  const { value } = (data as [moo.Token])[0];
+  const arr = /!\[([^\]]*)\]\(([^\)]*)\)/.exec(value);
+  if (!arr) {
+    return {
+      content: "",
+      annotations: [],
+    };
+  }
+  const [_, _content, src] = arr;
+  const content = _content || String.fromCharCode(0);
+  return {
+    content,
+    annotations: [
+      {
+        start: 0,
+        end: content.length,
+        type: "image",
+        attributes: {
+          src,
+        },
+      },
+    ],
   };
 };
 
