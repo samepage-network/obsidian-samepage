@@ -6,7 +6,7 @@ import {
 } from "samepage/utils/atJsonTokens";
 import nearley from "nearley";
 import { Annotation, InitialSchema } from "samepage/internal/types";
-import { disambiguateTokens as defaultDismabuagteTokens } from "samepage/utils/atJsonTokens";
+import { disambiguateTokens as defaultDisambiguateTokens } from "samepage/utils/atJsonTokens";
 import { getSetting } from "samepage/internal/registry";
 
 const lexer = compileLexer(
@@ -73,21 +73,10 @@ export const createItalicsToken: Processor<InitialSchema> = (
   return result;
 };
 
-export const createBlockTokens: Processor<InitialSchema> = (
-  data,
-  _,
-  reject
-) => {
+export const createBlockTokens: Processor<InitialSchema> = (data) => {
   const tokens = (data as (InitialSchemaAugmented[] | InitialSchemaAugmented)[])
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
     .filter((d): d is InitialSchemaAugmented => !!d);
-  if (
-    tokens
-      .slice(0, -1)
-      .some((t) => t.content.endsWith("\n") || t.content.startsWith("\t"))
-  ) {
-    return reject;
-  }
   return tokens.reduce(
     (total, current) => {
       const content = `${current.content}\n`;
@@ -119,28 +108,8 @@ export const createBlockTokens: Processor<InitialSchema> = (
   );
 };
 
-export const disambiguateTokens: Processor<InitialSchema> = (
-  data,
-  _,
-  reject
-) => {
-  const [tokens] = data as [InitialSchema[]];
-  // console.log(reject, "tokens", JSON.stringify(tokens));
-  if (
-    tokens.some(
-      (token, i, a) =>
-        token.content === "\n" &&
-        token.annotations.length === 0 &&
-        a[i + 1] &&
-        a[i + 1].content === "\n" &&
-        a[i + 1].annotations.length === 0
-    )
-  ) {
-    // console.log("REJECTED");
-    return reject;
-  }
-  return defaultDismabuagteTokens(data, _, reject);
-};
+export const disambiguateTokens: Processor<InitialSchema> =
+  defaultDisambiguateTokens;
 
 export const createAliasToken: Processor<InitialSchema> = (data) => {
   const { value } = (data as [moo.Token])[0];

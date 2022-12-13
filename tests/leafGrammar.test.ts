@@ -644,8 +644,8 @@ test(
   })
 );
 
-test.skip(
-  "Extra new line at end of bullet",
+test(
+  "Two new lines before bullet",
   runTest(
     "So this is a test share page.\n\n- So how does this work\n- And this\n\n",
     {
@@ -655,25 +655,25 @@ test.skip(
         {
           type: "block",
           start: 0,
-          end: 30,
+          end: 31,
           attributes: { viewType: "document", level: 1 },
         },
         {
           type: "block",
-          start: 30,
-          end: 51,
+          start: 31,
+          end: 53,
           attributes: { viewType: "bullet", level: 1 },
         },
         {
           type: "block",
-          start: 51,
-          end: 61,
-          attributes: { viewType: "bullet", level: 1 },
-        },
-        {
-          type: "block",
-          start: 61,
+          start: 53,
           end: 62,
+          attributes: { viewType: "bullet", level: 1 },
+        },
+        {
+          type: "block",
+          start: 62,
+          end: 63,
           attributes: { viewType: "document", level: 1 },
         },
       ],

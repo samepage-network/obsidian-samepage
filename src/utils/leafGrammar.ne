@@ -1,5 +1,3 @@
-@builtin "number.ne"
-@builtin "whitespace.ne"
 @preprocessor typescript
 
 @{%
@@ -32,8 +30,6 @@ main -> (
    | %newLine %tab:* %bullet tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} 
    | %newLine %tab:* %numbered tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}
   ):* {% createBlockTokens %}
-
-# document -> %tab:* tokens {% ([a,b]) =>  ({...b, tabs: a.length, viewType: "document"})%}
 
 tokens -> token:+ {% disambiguateTokens %} | null {% createEmpty %}
 
