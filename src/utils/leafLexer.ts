@@ -17,12 +17,16 @@ const lexer = compileLexer(
     reference: /\[\[[^\]]+\]\]/,
     bullet: { match: /- / },
     numbered: { match: /\d+\. / },
+    codeBlock: {
+      match: /```[\w ]*\n(?:[^`]|`(?!``)|``(?!`))*\n```/,
+      lineBreaks: true,
+    },
     openUnder: { match: /_(?=[^_]+_(?!_))/, lineBreaks: true },
     openStar: { match: /\*(?=[^*]+\*(?!\*))/, lineBreaks: true },
     openDoubleUnder: { match: /__(?=(?:[^_]|_[^_])*__)/, lineBreaks: true },
     openDoubleStar: { match: /\*\*(?=(?:[^*]|\*[^*])*\*\*)/, lineBreaks: true },
     openDoubleTilde: { match: /~~(?=(?:[^~]|~[^~])*~~)/, lineBreaks: true },
-    text: { match: /[^~_*[\]\n\t!()]+/, lineBreaks: true },
+    text: { match: /(?:[^~_*[\]\n\t!()`]|`(?!``)|``(?!`))+/, lineBreaks: true },
     newLine: { match: /\n/, lineBreaks: true },
     tab: { match: /\t/ },
   },
@@ -195,5 +199,24 @@ export const createNull: Processor<InitialSchema> = () => ({
   content: String.fromCharCode(0),
   annotations: [],
 });
+
+export const createCodeBlockToken: Processor<InitialSchema> = (data) => {
+  const { value } = (data as [moo.Token])[0];
+  const language = /^```([\w ]*)\n/.exec(value)?.[1] || "";
+  const content = value.replace(/^```[\w ]*\n/, "").replace(/```$/, "");
+  return {
+    content,
+    annotations: [
+      {
+        start: 0,
+        end: content.length,
+        type: "code",
+        attributes: {
+          language,
+        },
+      },
+    ],
+  };
+};
 
 export default lexer;

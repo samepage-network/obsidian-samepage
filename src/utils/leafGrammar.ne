@@ -16,6 +16,7 @@ import lexer, {
    createNull,
    createAssetToken,
    createAliasToken,
+   createCodeBlockToken,
 } from "./leafLexer";
 %}
 
@@ -40,6 +41,7 @@ token -> %openDoubleTilde (tokens {% id %} | null {% createNull %}) (%strike | %
    | %openStar tokens (%star | %openStar) {% createItalicsToken %}
    | %alias {% createAliasToken %}
    | %asset {% createAssetToken %}
+   | %codeBlock {% createCodeBlockToken %}
    | %exclamationMark %leftBracket tokens %rightBracket %leftParen %url %rightParen {% createImageToken %}
    | %reference {% createReferenceToken %}
    | %text {% createTextToken %}

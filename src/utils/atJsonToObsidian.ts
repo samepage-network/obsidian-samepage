@@ -27,7 +27,7 @@ const atJsonToObsidian = (state: InitialSchema) => {
         suffix: `~~`,
         replace: content === String.fromCharCode(0),
       }),
-      link: ({ attributes: { href } , content}) => ({
+      link: ({ attributes: { href }, content }) => ({
         prefix: "[",
         suffix: `](${href})`,
         replace: content === String.fromCharCode(0),
@@ -61,6 +61,12 @@ const atJsonToObsidian = (state: InitialSchema) => {
         }]]`,
         replace: content === String.fromCharCode(0),
       }),
+      code: ({ attributes: { language } }) => {
+        return {
+          prefix: `\`\`\`${language}\n`,
+          suffix: "```",
+        };
+      },
     },
   });
 };
