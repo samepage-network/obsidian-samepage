@@ -755,3 +755,57 @@ class SubClass(SuperClass):
     }
   )
 );
+
+test(
+  "Triple new line at end",
+  runTest("A page\n\n\n", {
+    content: "A page\n\n\n",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 8,
+        attributes: {
+          viewType: "document",
+          level: 1,
+        }
+      },
+      {
+        type: "block",
+        start: 8,
+        end: 9,
+        attributes: {
+          viewType: "document",
+          level: 1,
+        }
+      }
+    ],
+  })
+);
+
+test(
+  "Triple new line in the middle",
+  runTest("A page\n\n\nA paragraph", {
+    content: "A page\n\nA paragraph\n",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 8,
+        attributes: {
+          viewType: "document",
+          level: 1,
+        }
+      },
+      {
+        type: "block",
+        start: 8,
+        end: 20,
+        attributes: {
+          viewType: "document",
+          level: 1,
+        }
+      }
+    ],
+  })
+);

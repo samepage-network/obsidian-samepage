@@ -77,10 +77,17 @@ export const createItalicsToken: Processor<InitialSchema> = (
   return result;
 };
 
-export const createBlockTokens: Processor<InitialSchema> = (data) => {
+export const createBlockTokens: Processor<InitialSchema> = (
+  data,
+  _,
+  reject
+) => {
   const tokens = (data as (InitialSchemaAugmented[] | InitialSchemaAugmented)[])
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
     .filter((d): d is InitialSchemaAugmented => !!d);
+  if (tokens.some((_, i, a) => a[i + 1] && a[i + 1].content.startsWith("\n"))) {
+    return reject;
+  }
   return tokens.reduce(
     (total, current) => {
       const content = `${current.content}\n`;
