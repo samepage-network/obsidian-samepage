@@ -5,6 +5,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "postversion": "node scripts/postversion.js",
+    "postinstall": "patch-package --patch-dir node_modules/samepage/patches",
     "start": "node scripts/start.js",
     "pretest": "node scripts/pretest.js",
     "test": "node scripts/test.js"
@@ -34,6 +35,6 @@
   "dependencies": {
     "axios": "^0.27.2",
     "crypto-js": "^4.1.1",
-    "samepage": "^0.39.5"
+    "samepage": "^0.39.7"
   }
 }
