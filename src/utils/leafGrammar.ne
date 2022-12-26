@@ -23,13 +23,13 @@ import lexer, {
 @lexer lexer
 
 main -> (
-    %tab:* tokens {% ([a,b]) => ({...b, tabs: a.length, viewType: "document"})%} 
-  | %tab:* %bullet tokens {% ([a,_,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} 
-  | %tab:* %numbered tokens {% ([a,_,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}
+    %tab:* tokens {% ([tabs,b]) => ({...b, tabs, viewType: "document"})%} 
+  | %tab:* %bullet tokens {% ([tabs,_,b]) =>  ({...b, tabs, viewType: "bullet"})%} 
+  | %tab:* %numbered tokens {% ([tabs,_,b]) =>  ({...b, tabs, viewType: "numbered"})%}
   ) (
-   %newLine %newLine %tab:* tokens {% ([_, __, a,b]) =>  ({...b, tabs: a.length, viewType: "document"})%} 
-   | %newLine %tab:* %bullet tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "bullet"})%} 
-   | %newLine %tab:* %numbered tokens {% ([_,a,__,b]) =>  ({...b, tabs: a.length, viewType: "numbered"})%}
+   %newLine %newLine %tab:* tokens {% ([_, __, tabs,b]) =>  ({...b, tabs, viewType: "document"})%} 
+   | %newLine %tab:* %bullet tokens {% ([_,tabs,__,b]) =>  ({...b, tabs, viewType: "bullet"})%} 
+   | %newLine %tab:* %numbered tokens {% ([_,tabs,__,b]) =>  ({...b, tabs, viewType: "numbered"})%}
   ):* {% createBlockTokens %}
 
 tokens -> token:+ {% disambiguateTokens %} | null {% createEmpty %}

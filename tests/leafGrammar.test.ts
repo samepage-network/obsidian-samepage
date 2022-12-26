@@ -88,6 +88,11 @@ Some regular text to end.`,
           end: 98,
           start: 69,
           type: "block",
+          appAttributes: {
+            obsidian: {
+              spacing: "\t",
+            },
+          },
         },
         {
           attributes: {
@@ -768,7 +773,7 @@ test(
         attributes: {
           viewType: "document",
           level: 1,
-        }
+        },
       },
       {
         type: "block",
@@ -777,8 +782,8 @@ test(
         attributes: {
           viewType: "document",
           level: 1,
-        }
-      }
+        },
+      },
     ],
   })
 );
@@ -795,7 +800,7 @@ test(
         attributes: {
           viewType: "document",
           level: 1,
-        }
+        },
       },
       {
         type: "block",
@@ -804,8 +809,87 @@ test(
         attributes: {
           viewType: "document",
           level: 1,
-        }
-      }
+        },
+      },
+    ],
+  })
+);
+
+test(
+  "tabbing with spaces",
+  runTest("- Block\n    - Nested", {
+    content: "Block\nNested\n",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 6,
+        attributes: { level: 1, viewType: "bullet" },
+      },
+      {
+        type: "block",
+        start: 6,
+        end: 13,
+        attributes: { level: 2, viewType: "bullet" },
+        appAttributes: {
+          obsidian: {
+            spacing: `    `,
+          },
+        },
+      },
+    ],
+  })
+);
+
+test(
+  "Empty bullet with newline",
+  runTest("\n- \n", {
+    content: "\n\n\n",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 1,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "block",
+        start: 1,
+        end: 3,
+        attributes: { level: 1, viewType: "bullet" },
+      },
+    ],
+  })
+);
+
+test(
+  "Single new line after line",
+  runTest("Single new line\n\n\t\n", {
+    content: "Single new line\n\n\n",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 16,
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+      },
+      {
+        type: "block",
+        start: 16,
+        end: 18,
+        attributes: {
+          level: 2,
+          viewType: "document",
+        },
+        appAttributes: {
+          obsidian: {
+            spacing: `\t`,
+          },
+        },
+      },
     ],
   })
 );

@@ -37,13 +37,18 @@ const atJsonToObsidian = (state: InitialSchema) => {
         suffix: `](${src})`,
         replace: content === String.fromCharCode(0),
       }),
-      block: ({ attributes: { level, viewType }, content, index }) => {
+      block: ({
+        attributes: { level, viewType },
+        content,
+        index,
+        appAttributes: { spacing } = {},
+      }) => {
         const firstBlock = firstBlockIndex === index;
         return {
           suffix: content.replace(/\n$/, ""),
           prefix: `${firstBlock ? "" : "\n"}${
             firstBlock || viewType !== "document" ? "" : "\n"
-          }${"".padStart(level - 1, "\t")}${
+          }${level === 1 ? "" : spacing || "".padStart(level - 1, "\t")}${
             viewType === "bullet" ? "- " : viewType === "numbered" ? "1. " : ""
           }`,
           replace: true,

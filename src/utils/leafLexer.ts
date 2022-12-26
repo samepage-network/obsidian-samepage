@@ -26,9 +26,9 @@ const lexer = compileLexer(
     openDoubleUnder: { match: /__(?=(?:[^_]|_[^_])*__)/, lineBreaks: true },
     openDoubleStar: { match: /\*\*(?=(?:[^*]|\*[^*])*\*\*)/, lineBreaks: true },
     openDoubleTilde: { match: /~~(?=(?:[^~]|~[^~])*~~)/, lineBreaks: true },
+    tab: { match: /(?:\t|    )/ },
     text: { match: /(?:[^~_*[\]\n\t!()`]|`(?!``)|``(?!`))+/, lineBreaks: true },
     newLine: { match: /\n/, lineBreaks: true },
-    tab: { match: /\t/ },
   },
   ["highlight"]
 );
@@ -45,7 +45,7 @@ export const createEmpty: Processor<InitialSchema> = (data) => {
 };
 
 type InitialSchemaAugmented = InitialSchema & {
-  tabs: number;
+  tabs: moo.Token[];
   viewType: "document" | "bullet" | "numbered";
 };
 
@@ -85,7 +85,15 @@ export const createBlockTokens: Processor<InitialSchema> = (
   const tokens = (data as (InitialSchemaAugmented[] | InitialSchemaAugmented)[])
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
     .filter((d): d is InitialSchemaAugmented => !!d);
-  if (tokens.some((_, i, a) => a[i + 1] && a[i + 1].content.startsWith("\n"))) {
+  if (
+    tokens.some(
+      (_, i, a) =>
+        a[i + 1] &&
+        a[i + 1].content.startsWith("\n") &&
+        a[i + 1].viewType === "document" &&
+        a[i + 1].tabs.length === 0
+    )
+  ) {
     return reject;
   }
   return tokens.reduce(
@@ -99,9 +107,18 @@ export const createBlockTokens: Processor<InitialSchema> = (
             start: total.content.length,
             end: total.content.length + content.length,
             attributes: {
-              level: current.tabs + 1,
+              level: current.tabs.length + 1,
               viewType: current.viewType,
             },
+            ...(current.tabs.length
+              ? {
+                  appAttributes: {
+                    obsidian: {
+                      spacing: current.tabs.join(""),
+                    },
+                  },
+                }
+              : {}),
           })
           .concat(
             current.annotations.map((a) => ({
