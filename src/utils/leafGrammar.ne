@@ -58,5 +58,6 @@ token -> %openDoubleTilde (tokens {% id %} | null {% createNull %}) (%strike | %
    | %rightBracket {% createTextToken %}
    | %exclamationMark {% createTextToken %}
    | %leftBracket %rightBracket %leftParen %url %rightParen {% createTextToken %}
+   | %url {% createTextToken %}
    | %tab {% createTextToken %}
    | %newLine {% createTextToken %}

@@ -893,3 +893,24 @@ test(
     ],
   })
 );
+
+test(
+  "Unclosed alias",
+  runTest(
+    `[unclosed alias](https://samepage.network`,
+    {
+      content: "[unclosed alias](https://samepage.network\n",
+      annotations: [
+        {
+          type: "block",
+          start: 0,
+          end: 42,
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+        },
+      ],
+    }
+  )
+);
