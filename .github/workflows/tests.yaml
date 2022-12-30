@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: main
-    paths:
-      - "tests/**"
-      - ".github/workflows/tests.yaml"
 
 env:
   API_URL: https://api.samepage.network
