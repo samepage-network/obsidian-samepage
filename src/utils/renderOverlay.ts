@@ -12,7 +12,7 @@ const renderOverlay: RenderOverlay = ({
   const parent = document.createElement("div");
   parent.id = id.replace(/^\d*/, "");
   let onClose: () => void;
-  const finishRendering = () => {
+  const finishRendering = (i = 0) => {
     const pathElement =
       typeof path === "undefined"
         ? document.body.lastElementChild
@@ -38,14 +38,11 @@ const renderOverlay: RenderOverlay = ({
           isOpen: true,
         })
       );
+    } else if (i < 100) {
+      setTimeout(() => finishRendering(i + 1), 100);
     }
   };
-  // TODO - need a better way to solve this race condition
-  if (parent.id === "samepage-notification-container") {
-    setTimeout(finishRendering, 100);
-  } else {
-    finishRendering();
-  }
+  finishRendering();
 
   return () => {
     onClose?.();
