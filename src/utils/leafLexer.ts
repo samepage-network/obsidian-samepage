@@ -9,29 +9,31 @@ import { Annotation, InitialSchema } from "samepage/internal/types";
 import { disambiguateTokens as defaultDisambiguateTokens } from "samepage/utils/atJsonTokens";
 import { getSetting } from "samepage/internal/registry";
 
-const lexer = compileLexer(
-  {
-    alias: /\[[^\]]*\]\([^\)]*\)/,
-    asset: /!\[[^\]]*\]\([^\)]*\)/,
-    url: DEFAULT_TOKENS.url,
-    reference: /\[\[[^\]]+\]\]/,
-    bullet: { match: /- / },
-    numbered: { match: /\d+\. / },
-    codeBlock: {
-      match: /```[\w ]*\n(?:[^`]|`(?!``)|``(?!`))*\n```/,
-      lineBreaks: true,
-    },
-    openUnder: { match: /_(?=[^_]+_(?!_))/, lineBreaks: true },
-    openStar: { match: /\*(?=[^*]+\*(?!\*))/, lineBreaks: true },
-    openDoubleUnder: { match: /__(?=(?:[^_]|_[^_])*__)/, lineBreaks: true },
-    openDoubleStar: { match: /\*\*(?=(?:[^*]|\*[^*])*\*\*)/, lineBreaks: true },
-    openDoubleTilde: { match: /~~(?=(?:[^~]|~[^~])*~~)/, lineBreaks: true },
-    tab: { match: /(?:\t|    )/ },
-    text: { match: /(?:[^~_*[\]\n\t!()`]|`(?!``)|``(?!`))+/, lineBreaks: true },
-    newLine: { match: /\n/, lineBreaks: true },
+const TOKENS = {
+  alias: /\[[^\]]*\]\([^\)]*\)/,
+  asset: /!\[[^\]]*\]\([^\)]*\)/,
+  url: DEFAULT_TOKENS.url,
+  reference: /\[\[[^\]]+\]\]/,
+  initialBullet: { match: /^(?:\t|    )*- /, lineBreaks: true },
+  initialNumbered: { match: /^(?:\t|    )*\d+\. /, lineBreaks: true },
+  bullet: { match: /\n(?:\t|    )*- /, lineBreaks: true },
+  numbered: { match: /\n(?:\t|    )*\d+\. /, lineBreaks: true },
+  codeBlock: {
+    match: /```[\w ]*\n(?:[^`]|`(?!``)|``(?!`))*\n```/,
+    lineBreaks: true,
   },
-  ["highlight"]
-);
+  openUnder: { match: /_(?=[^_]+_(?!_))/, lineBreaks: true },
+  openStar: { match: /\*(?=[^*]+\*(?!\*))/, lineBreaks: true },
+  openDoubleUnder: { match: /__(?=(?:[^_]|_[^_])*__)/, lineBreaks: true },
+  openDoubleStar: { match: /\*\*(?=(?:[^*]|\*[^*])*\*\*)/, lineBreaks: true },
+  openDoubleTilde: { match: /~~(?=(?:[^~]|~[^~])*~~)/, lineBreaks: true },
+  tab: { match: /(?:\t|    )/ },
+  text: { match: /(?:[^~_*[\]\n\t!()`]|`(?!``)|``(?!`))+/, lineBreaks: true },
+  paragraph: { match: /\n\n\t*(?!- |\d+\.)/, lineBreaks: true },
+  newLine: { match: /\n/, lineBreaks: true },
+};
+
+const lexer = compileLexer(TOKENS, ["highlight"]);
 
 type Processor<T> = (
   ...args: Parameters<nearley.Postprocessor>
@@ -45,7 +47,7 @@ export const createEmpty: Processor<InitialSchema> = (data) => {
 };
 
 type InitialSchemaAugmented = InitialSchema & {
-  tabs: moo.Token[];
+  tabs?: moo.Token | moo.Token[];
   viewType: "document" | "bullet" | "numbered";
 };
 
@@ -77,28 +79,35 @@ export const createItalicsToken: Processor<InitialSchema> = (
   return result;
 };
 
+const getLevel = (t?: moo.Token | moo.Token[]) => {
+  if (!t) return 1;
+  if (Array.isArray(t)) return t.length + 1;
+  return t.text.split(/\t|    /).length;
+};
+
 export const createBlockTokens: Processor<InitialSchema> = (
   data,
-  _,
-  reject
+  _
+  // reject
 ) => {
   const tokens = (data as (InitialSchemaAugmented[] | InitialSchemaAugmented)[])
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
     .filter((d): d is InitialSchemaAugmented => !!d);
-  if (
-    tokens.some(
-      (_, i, a) =>
-        a[i + 1] &&
-        a[i + 1].content.startsWith("\n") &&
-        a[i + 1].viewType === "document" &&
-        a[i + 1].tabs.length === 0
-    )
-  ) {
-    return reject;
-  }
+  // if (
+  //   tokens.some(
+  //     (_, i, a) =>
+  //       a[i + 1] &&
+  //       a[i + 1].content.startsWith("\n") &&
+  //       a[i + 1].viewType === "document" &&
+  //       getLevel(a[i + 1].tabs) === 1
+  //   )
+  // ) {
+  //   return reject;
+  // }
   return tokens.reduce(
     (total, current) => {
       const content = `${current.content}\n`;
+      const level = getLevel(current.tabs);
       return {
         content: `${total.content}${content}`,
         annotations: total.annotations
@@ -107,14 +116,16 @@ export const createBlockTokens: Processor<InitialSchema> = (
             start: total.content.length,
             end: total.content.length + content.length,
             attributes: {
-              level: current.tabs.length + 1,
+              level,
               viewType: current.viewType,
             },
-            ...(current.tabs.length
+            ...(level > 1 && current.tabs
               ? {
                   appAttributes: {
                     obsidian: {
-                      spacing: current.tabs.join(""),
+                      spacing: Array.isArray(current.tabs)
+                        ? current.tabs.map((t) => t.text).join("")
+                        : current.tabs.text.match(/(?:\t|    )+/)?.[0] || "",
                     },
                   },
                 }
