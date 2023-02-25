@@ -769,7 +769,7 @@ test(
       {
         type: "block",
         start: 0,
-        end: 8,
+        end: 7,
         attributes: {
           viewType: "document",
           level: 1,
@@ -777,7 +777,7 @@ test(
       },
       {
         type: "block",
-        start: 8,
+        start: 7,
         end: 9,
         attributes: {
           viewType: "document",
@@ -796,7 +796,7 @@ test(
       {
         type: "block",
         start: 0,
-        end: 8,
+        end: 7,
         attributes: {
           viewType: "document",
           level: 1,
@@ -804,7 +804,7 @@ test(
       },
       {
         type: "block",
-        start: 8,
+        start: 7,
         end: 20,
         attributes: {
           viewType: "document",
@@ -896,21 +896,47 @@ test(
 
 test(
   "Unclosed alias",
-  runTest(
-    `[unclosed alias](https://samepage.network`,
-    {
-      content: "[unclosed alias](https://samepage.network\n",
-      annotations: [
-        {
-          type: "block",
-          start: 0,
-          end: 42,
-          attributes: {
-            level: 1,
-            viewType: "document",
-          },
+  runTest(`[unclosed alias](https://samepage.network`, {
+    content: "[unclosed alias](https://samepage.network\n",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 42,
+        attributes: {
+          level: 1,
+          viewType: "document",
         },
-      ],
-    }
-  )
+      },
+    ],
+  })
 );
+
+test("Lots of blocks", () => {
+  const blocks = Array(30).fill(null);
+  const md = blocks.reduce((p) => `${p}Hello\n\n`, "");
+  const content = blocks.reduce((p) => `${p}Hello\n`, "") + "\n";
+  const annotations = blocks
+    .map((_, i) => ({
+      attributes: {
+        level: 1,
+        viewType: "document" as const,
+      },
+      end: (i + 1) * 6,
+      start: i * 6,
+      type: "block" as const,
+    }))
+    .concat({
+      attributes: {
+        level: 1,
+        viewType: "document" as const,
+      },
+      end: 181,
+      start: 180,
+      type: "block" as const,
+    });
+  runTest(md, {
+    annotations,
+    content,
+  })();
+});
