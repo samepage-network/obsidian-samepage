@@ -66,10 +66,11 @@ const atJsonToObsidian = (state: InitialSchema) => {
         }]]`,
         replace: content === String.fromCharCode(0),
       }),
-      code: ({ attributes: { language } }) => {
+      code: ({ attributes: { language, ticks = 3 } }) => {
+        const ending = Array(ticks).fill("`").join("");
         return {
-          prefix: `\`\`\`${language}\n`,
-          suffix: "```",
+          prefix: `${ending}${language}\n`,
+          suffix: ending,
         };
       },
     },

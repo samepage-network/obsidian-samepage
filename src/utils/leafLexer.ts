@@ -19,7 +19,7 @@ const TOKENS = {
   bullet: { match: /\n(?:\t|    )*- /, lineBreaks: true },
   numbered: { match: /\n(?:\t|    )*\d+\. /, lineBreaks: true },
   codeBlock: {
-    match: /```[\w ]*\n(?:[^`]|`(?!``)|``(?!`))*\n```/,
+    match: /`{3,}[\w -]*\n(?:[^`]|`(?!``)|``(?!`))*`{3,}/,
     lineBreaks: true,
   },
   openUnder: { match: /_(?=[^_]+_(?!_))/, lineBreaks: true },
@@ -85,10 +85,7 @@ const getLevel = (t?: moo.Token | moo.Token[]) => {
   return t.text.split(/\t|    /).length;
 };
 
-export const createBlockTokens: Processor<InitialSchema> = (
-  data,
-  _
-) => {
+export const createBlockTokens: Processor<InitialSchema> = (data, _) => {
   const tokens = (data as (InitialSchemaAugmented[] | InitialSchemaAugmented)[])
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
     .filter((d): d is InitialSchemaAugmented => !!d);
@@ -225,8 +222,13 @@ export const createNull: Processor<InitialSchema> = () => ({
 
 export const createCodeBlockToken: Processor<InitialSchema> = (data) => {
   const { value } = (data as [moo.Token])[0];
-  const language = /^```([\w ]*)\n/.exec(value)?.[1] || "";
-  const content = value.replace(/^```[\w ]*\n/, "").replace(/```$/, "");
+  const match = /^(`{3,})([\w -]*)\n/.exec(value);
+  const ticks =
+    match?.[1]?.length && match?.[1]?.length > 3
+      ? match?.[1]?.length
+      : undefined;
+  const language = match?.[2] || "";
+  const content = value.replace(/^`{3,}[\w -]*\n/, "").replace(/`{3,}$/, "");
   return {
     content,
     annotations: [
@@ -236,6 +238,7 @@ export const createCodeBlockToken: Processor<InitialSchema> = (data) => {
         type: "code",
         attributes: {
           language,
+          ticks,
         },
       },
     ],

@@ -940,3 +940,92 @@ test("Lots of blocks", () => {
     content,
   })();
 });
+
+test(
+  "Code block with hyphen",
+  runTest(
+    `\`\`\`ad-icon
+<svg></svg>
+\`\`\``,
+    {
+      content: "<svg></svg>\n\n",
+      annotations: [
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 13,
+          start: 0,
+          type: "block",
+        },
+        {
+          attributes: {
+            language: "ad-icon",
+          },
+          end: 12,
+          start: 0,
+          type: "code",
+        },
+      ],
+    }
+  )
+);
+
+test(
+  "Code block without newline before close",
+  runTest("```dataviewjs\nlet setting = {};\n>```", {
+    content: "let setting = {};\n>\n",
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+        end: 20,
+        start: 0,
+        type: "block",
+      },
+      {
+        attributes: {
+          language: "dataviewjs",
+        },
+        end: 19,
+        start: 0,
+        type: "code",
+      },
+    ],
+  })
+);
+
+test(
+  "Code block with four ticks",
+  runTest(
+    `\`\`\`\`adgrid
+> [!profile-card|cards]
+\`\`\`\``,
+    {
+      content: "> [!profile-card|cards]\n\n",
+      annotations: [
+        {
+          attributes: {
+            level: 1,
+            viewType: "document",
+          },
+          end: 25,
+          start: 0,
+          type: "block",
+        },
+        {
+          attributes: {
+            language: "adgrid",
+            ticks: 4,
+          },
+          end: 24,
+          start: 0,
+          type: "code",
+        },
+      ],
+    }
+  )
+);
