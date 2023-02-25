@@ -88,22 +88,10 @@ const getLevel = (t?: moo.Token | moo.Token[]) => {
 export const createBlockTokens: Processor<InitialSchema> = (
   data,
   _
-  // reject
 ) => {
   const tokens = (data as (InitialSchemaAugmented[] | InitialSchemaAugmented)[])
     .flatMap((d) => (Array.isArray(d) ? d : d ? [d] : undefined))
     .filter((d): d is InitialSchemaAugmented => !!d);
-  // if (
-  //   tokens.some(
-  //     (_, i, a) =>
-  //       a[i + 1] &&
-  //       a[i + 1].content.startsWith("\n") &&
-  //       a[i + 1].viewType === "document" &&
-  //       getLevel(a[i + 1].tabs) === 1
-  //   )
-  // ) {
-  //   return reject;
-  // }
   return tokens.reduce(
     (total, current) => {
       const content = `${current.content}\n`;
