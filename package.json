@@ -1,6 +1,6 @@
 {
   "name": "obsidian-samepage",
-  "version": "2.3.21",
+  "version": "2.4.0",
   "description": "Official Obsidian client into the intra tool-for-thought protocol.",
   "main": "./dist/index.js",
   "scripts": {
