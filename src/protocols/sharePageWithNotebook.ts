@@ -61,7 +61,18 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
     applyState: (id, state) => applyState(id, state, plugin),
     calculateState: (id) => calculateState(id, plugin),
     getCurrentNotebookPageId: async () => getCurrentNotebookPageId(plugin),
-    createPage: (title) => plugin.app.vault.create(`${title}.md`, ""),
+    createPage: async (title) => {
+      const pathParts = title.split("/");
+      await Promise.all(
+        pathParts.slice(0, -1).map((_, i, a) => {
+          const path = a.slice(0, i + 1).join("/");
+          if (!plugin.app.vault.getAbstractFileByPath(path)) {
+            return plugin.app.vault.createFolder(path);
+          }
+        })
+      );
+      return plugin.app.vault.create(`${title}.md`, "");
+    },
     deletePage: async (title) => {
       const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
       if (newFile instanceof TFile) {

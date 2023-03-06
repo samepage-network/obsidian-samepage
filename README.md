@@ -4,7 +4,7 @@
 
 Official Obsidian client into [SamePage](https://samepage.network) - the inter-tool protocol for thought.
 
-Use SamePage to connect your Obsidian Vault to other notebooks to sync changes across them, perform cross notebook queries, and more! To get started, install this extension and request an invite code by emailing support@samepage.network. Check out our docs at [https://samepage.network/docs](https://samepage.network/docs)!
+Use SamePage to connect your Obsidian Vault to other notebooks to sync changes across them, perform cross notebook queries, and more! If you need help getting started, check out our docs at [https://samepage.network/docs](https://samepage.network/docs)!
 
 ## Demo
 
