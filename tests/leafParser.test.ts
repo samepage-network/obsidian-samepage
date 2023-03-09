@@ -1118,8 +1118,7 @@ test(
           attributes: { level: 1, viewType: "document" },
         },
       ],
-    },
-    { debug: true }
+    }
   )
 );
 
@@ -1170,8 +1169,7 @@ test(
           attributes: { level: 1, viewType: "document" },
         },
       ],
-    },
-    { debug: true }
+    }
   )
 );
 
@@ -1201,8 +1199,7 @@ test(
           attributes: { level: 1, viewType: "document" },
         },
       ],
-    },
-    { debug: true }
+    }
   )
 );
 
@@ -1232,8 +1229,7 @@ test(
           attributes: { level: 1, viewType: "document" },
         },
       ],
-    },
-    { debug: true }
+    }
   )
 );
 

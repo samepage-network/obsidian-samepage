@@ -15,9 +15,6 @@
     "noEmit": true,
     "jsx": "react",
     "baseUrl": ".",
-    "paths": {
-      "../src/utils/leafGrammar.ne": ["./src/utils/leafGrammar.ne.ts"]
-    }
   },
   "include": ["./src", "./node_modules/samepage/declare.d.ts"]
 }

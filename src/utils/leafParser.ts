@@ -4,11 +4,11 @@ import { getSetting } from "samepage/internal/registry";
 import atJsonParser, {
   combineAtJsons,
   createEmptyAtJson,
-  createNullAtJson,
   createTextAtJson,
   head,
   URL_REGEX,
-} from "./samePageUtils/atJsonParser";
+  NULL_TOKEN,
+} from "samepage/utils/atJsonParser";
 
 const getLevel = (t?: moo.Token) => {
   if (!t) return 1;
@@ -304,12 +304,14 @@ const leafParser = atJsonParser({
         };
         return combineAtJsons([first, bold]);
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 2 && ctx.flags.has("doubleStar")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 2 && ctx.flags.has("doubleStar")) return reject;
         else if (dot === 2) {
+          const flags = new Set(Array.from(ctx.flags));
+          flags.add("doubleStar");
           return {
             ...ctx,
-            flags: new Set(Array.from(ctx.flags).concat("doubleStar")),
+            flags,
           };
         }
         return ctx;
@@ -348,8 +350,8 @@ const leafParser = atJsonParser({
         };
         return combineAtJsons([first, bold]);
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 2 && ctx.flags.has("doubleStar")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 2 && ctx.flags.has("doubleStar")) return reject;
         else if (dot === 2) {
           return {
             ...ctx,
@@ -398,8 +400,8 @@ const leafParser = atJsonParser({
         };
         return combineAtJsons([first, bold]);
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 2 && ctx.flags.has("doubleUnder")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 2 && ctx.flags.has("doubleUnder")) return reject;
         else if (dot === 2) {
           return {
             ...ctx,
@@ -472,8 +474,8 @@ const leafParser = atJsonParser({
         };
         return combineAtJsons([first, bold]);
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 2 && ctx.flags.has("singleStar")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 2 && ctx.flags.has("singleStar")) return reject;
         else if (dot === 2) {
           return {
             ...ctx,
@@ -510,8 +512,8 @@ const leafParser = atJsonParser({
         };
         return combineAtJsons([first, bold]);
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 2 && ctx.flags.has("singleUnder")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 2 && ctx.flags.has("singleUnder")) return reject;
         else if (dot === 2) {
           return {
             ...ctx,
@@ -642,8 +644,8 @@ const leafParser = atJsonParser({
           ).concat(first.annotations),
         };
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 1 && ctx.flags.has("doubleUnder")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 1 && ctx.flags.has("doubleUnder")) return reject;
         else if (dot === 1) {
           const flags = new Set(ctx.flags);
           flags.add("doubleUnder");
@@ -735,8 +737,8 @@ const leafParser = atJsonParser({
           ).concat(first.annotations),
         };
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 1 && ctx.flags.has("doubleStar")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 1 && ctx.flags.has("doubleStar")) return reject;
         else if (dot === 1) {
           const flags = new Set(ctx.flags);
           flags.add("doubleStar");
@@ -782,8 +784,8 @@ const leafParser = atJsonParser({
           ).concat(first.annotations),
         };
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 1 && ctx.flags.has("singleUnder")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 1 && ctx.flags.has("singleUnder")) return reject;
         else if (dot === 1) {
           const flags = new Set(ctx.flags);
           flags.add("singleUnder");
@@ -829,8 +831,8 @@ const leafParser = atJsonParser({
           ).concat(first.annotations),
         };
       },
-      preprocess: (ctx, dot) => {
-        if (dot === 1 && ctx.flags.has("singleStar")) return undefined;
+      preprocess: (ctx, dot, reject) => {
+        if (dot === 1 && ctx.flags.has("singleStar")) return reject;
         else if (dot === 1) {
           const flags = new Set(ctx.flags);
           flags.add("singleStar");
@@ -853,7 +855,7 @@ const leafParser = atJsonParser({
           };
         }
         const [_, _content, href] = arr;
-        const content = _content || String.fromCharCode(0);
+        const content = _content || NULL_TOKEN;
         return {
           content,
           annotations: [
@@ -882,7 +884,7 @@ const leafParser = atJsonParser({
           };
         }
         const [_, _content, src] = arr;
-        const content = _content || String.fromCharCode(0);
+        const content = _content || NULL_TOKEN;
         return {
           content,
           annotations: [
@@ -929,54 +931,6 @@ const leafParser = atJsonParser({
       },
     },
     {
-      name: "imageAlias",
-      symbols: ["additionalToken"],
-      postprocess: head,
-    },
-    {
-      name: "imageAlias",
-      symbols: [],
-      postprocess: createNullAtJson,
-    },
-    {
-      name: "token",
-      symbols: [
-        { type: "exclamationMark" },
-        { type: "leftBracket" },
-        "imageAlias",
-        { type: "rightBracket" },
-        { type: "leftParen" },
-        { type: "url" },
-        { type: "rightParen" },
-      ],
-      postprocess: (_data) => {
-        const data = _data as [
-          moo.Token,
-          moo.Token,
-          InitialSchema,
-          moo.Token,
-          moo.Token,
-          moo.Token,
-          moo.Token
-        ];
-        const { content: _content, annotations = [] } = data[2] || {};
-        const content = _content || String.fromCharCode(0);
-        return {
-          content,
-          annotations: [
-            {
-              type: "image",
-              start: 0,
-              end: content.length,
-              attributes: {
-                src: data[5].text,
-              },
-            } as Annotation,
-          ].concat(annotations),
-        };
-      },
-    },
-    {
       name: "token",
       symbols: [{ type: "reference" }],
       postprocess: (_data) => {
@@ -992,7 +946,7 @@ const leafParser = atJsonParser({
           ? value.slice(parsedNotebookUuid.length)
           : value;
         return {
-          content: String.fromCharCode(0),
+          content: NULL_TOKEN,
           annotations: [
             {
               type: "reference",
@@ -1041,7 +995,9 @@ const leafParser = atJsonParser({
       name: "textToken",
       symbols: [{ type: "closeUnder" }],
       postprocess: (data, ctx, reject) =>
-        ctx.flags.has("singleUnder") ? reject : createTextAtJson(data),
+        ctx.flags.has("singleUnder")
+          ? reject
+          : createTextAtJson(data, ctx, reject),
     },
     {
       name: "textToken",
