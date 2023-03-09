@@ -1,8 +1,6 @@
-import leafGrammar from "../src/utils/leafGrammar";
 import atJsonToObsidian from "../src/utils/atJsonToObsidian";
-import lexer from "../src/utils/leafLexer";
+import leafParser from "../src/utils/leafParser";
 import type { InitialSchema } from "samepage/internal/types";
-import atJsonParser from "samepage/utils/atJsonParser";
 import { test, expect } from "@playwright/test";
 import { v4 } from "uuid";
 import setupRegistry from "samepage/internal/registry";
@@ -20,15 +18,7 @@ const runTest =
     opts: { debug?: true; skipInverse?: true } = {}
   ) =>
   () => {
-    if (opts.debug) {
-      const buffer = lexer.reset(md);
-      let token = buffer.next();
-      while (token) {
-        console.log(token);
-        token = buffer.next();
-      }
-    }
-    const output = atJsonParser(leafGrammar, md);
+    const output = leafParser(md, opts);
     expect(output).toBeTruthy();
     expect(output).toEqual(expected);
     if (!opts.skipInverse) expect(atJsonToObsidian(output)).toEqual(md);
@@ -116,15 +106,20 @@ Some regular text to end.`,
           type: "bold",
           start: 132,
           end: 136,
-          appAttributes: { obsidian: { kind: "**" } },
+          attributes: { delimiter: "**" },
         },
         {
           type: "italics",
           start: 140,
           end: 147,
-          appAttributes: { obsidian: { kind: "*" } },
+          attributes: { delimiter: "*" },
         },
-        { type: "strikethrough", start: 150, end: 156 },
+        {
+          type: "strikethrough",
+          start: 150,
+          end: 156,
+          attributes: { delimiter: "~~" },
+        },
         {
           attributes: {
             level: 1,
@@ -400,13 +395,13 @@ test(
         start: 5,
         end: 9,
         type: "italics",
-        appAttributes: { obsidian: { kind: "_" } },
+        attributes: { delimiter: "_" },
       },
       {
         start: 14,
         end: 18,
         type: "italics",
-        appAttributes: { obsidian: { kind: "_" } },
+        attributes: { delimiter: "_" },
       },
     ],
   })
@@ -415,16 +410,25 @@ test(
 test(
   "Just double underscore should be valid",
   runTest("Review __public pages", {
-    content: "Review __public pages\n",
+    content: "Review public pages\n",
     annotations: [
       {
         attributes: {
           level: 1,
           viewType: "document",
         },
-        end: 22,
+        end: 20,
         start: 0,
         type: "block",
+      },
+      {
+        type: "bold",
+        start: 7,
+        end: 19,
+        attributes: {
+          delimiter: "__",
+          open: true,
+        },
       },
     ],
   })
@@ -433,16 +437,25 @@ test(
 test(
   "Just double asterisk should be valid",
   runTest("Review **public pages", {
-    content: "Review **public pages\n",
+    content: "Review public pages\n",
     annotations: [
       {
         attributes: {
           level: 1,
           viewType: "document",
         },
-        end: 22,
+        end: 20,
         start: 0,
         type: "block",
+      },
+      {
+        attributes: {
+          delimiter: "**",
+          open: true,
+        },
+        end: 19,
+        start: 7,
+        type: "bold",
       },
     ],
   })
@@ -489,14 +502,14 @@ test(
 test(
   "Odd number underscores",
   runTest("Deal _with_ odd _underscores", {
-    content: "Deal with odd _underscores\n",
+    content: "Deal with odd underscores\n",
     annotations: [
       {
         attributes: {
           level: 1,
           viewType: "document",
         },
-        end: 27,
+        end: 26,
         start: 0,
         type: "block",
       },
@@ -504,7 +517,13 @@ test(
         start: 5,
         end: 9,
         type: "italics",
-        appAttributes: { obsidian: { kind: "_" } },
+        attributes: { delimiter: "_" },
+      },
+      {
+        start: 14,
+        end: 25,
+        type: "italics",
+        attributes: { delimiter: "_", open: true },
       },
     ],
   })
@@ -513,14 +532,14 @@ test(
 test(
   "Odd number asterisks",
   runTest("Deal *with* odd *asterisks", {
-    content: "Deal with odd *asterisks\n",
+    content: "Deal with odd asterisks\n",
     annotations: [
       {
         attributes: {
           level: 1,
           viewType: "document",
         },
-        end: 25,
+        end: 24,
         start: 0,
         type: "block",
       },
@@ -528,7 +547,13 @@ test(
         start: 5,
         end: 9,
         type: "italics",
-        appAttributes: { obsidian: { kind: "*" } },
+        attributes: { delimiter: "*" },
+      },
+      {
+        start: 14,
+        end: 23,
+        type: "italics",
+        attributes: { delimiter: "*", open: true },
       },
     ],
   })
@@ -537,31 +562,7 @@ test(
 test(
   "Odd number double underscores",
   runTest("Deal __with__ odd __underscores", {
-    content: `Deal with odd __underscores\n`,
-    annotations: [
-      {
-        attributes: {
-          level: 1,
-          viewType: "document",
-        },
-        end: 28,
-        start: 0,
-        type: "block",
-      },
-      {
-        start: 5,
-        end: 9,
-        type: "bold",
-        appAttributes: { obsidian: { kind: "__" } },
-      },
-    ],
-  })
-);
-
-test(
-  "Odd number double asterisks",
-  runTest("Deal **with** odd **asterisks", {
-    content: `Deal with odd **asterisks\n`,
+    content: `Deal with odd underscores\n`,
     annotations: [
       {
         attributes: {
@@ -576,7 +577,43 @@ test(
         start: 5,
         end: 9,
         type: "bold",
-        appAttributes: { obsidian: { kind: "**" } },
+        attributes: { delimiter: "__" },
+      },
+      {
+        start: 14,
+        end: 25,
+        type: "bold",
+        attributes: { delimiter: "__", open: true },
+      },
+    ],
+  })
+);
+
+test(
+  "Odd number double asterisks",
+  runTest("Deal **with** odd **asterisks", {
+    content: `Deal with odd asterisks\n`,
+    annotations: [
+      {
+        attributes: {
+          level: 1,
+          viewType: "document",
+        },
+        end: 24,
+        start: 0,
+        type: "block",
+      },
+      {
+        start: 5,
+        end: 9,
+        type: "bold",
+        attributes: { delimiter: "**" },
+      },
+      {
+        start: 14,
+        end: 23,
+        type: "bold",
+        attributes: { delimiter: "**", open: true },
       },
     ],
   })
@@ -596,15 +633,20 @@ test(
         start: 0,
         type: "block",
       },
-      { start: 5, end: 9, type: "strikethrough" },
+      {
+        start: 5,
+        end: 9,
+        type: "strikethrough",
+        attributes: { delimiter: "~~" },
+      },
     ],
   })
 );
 
 test(
   "Underscore within bold underscores",
-  runTest("__hello_world__", {
-    content: "hello_world\n",
+  runTest("__hello _world__", {
+    content: "hello world\n",
     annotations: [
       {
         attributes: {
@@ -619,7 +661,18 @@ test(
         end: 11,
         start: 0,
         type: "bold",
-        appAttributes: { obsidian: { kind: "__" } },
+        attributes: {
+          delimiter: "__",
+        },
+      },
+      {
+        end: 11,
+        start: 6,
+        type: "italics",
+        attributes: {
+          delimiter: "_",
+          open: true,
+        },
       },
     ],
   })
@@ -627,8 +680,8 @@ test(
 
 test(
   "Asterisk within bold stars",
-  runTest("**hello*world**", {
-    content: "hello*world\n",
+  runTest("**hello *world**", {
+    content: "hello world\n",
     annotations: [
       {
         attributes: {
@@ -643,7 +696,16 @@ test(
         end: 11,
         start: 0,
         type: "bold",
-        appAttributes: { obsidian: { kind: "**" } },
+        attributes: { delimiter: "**" },
+      },
+      {
+        end: 11,
+        start: 6,
+        type: "italics",
+        attributes: {
+          delimiter: "*",
+          open: true,
+        },
       },
     ],
   })
@@ -1028,4 +1090,338 @@ test(
       ],
     }
   )
+);
+
+test(
+  "Unclosed bolding (star)",
+  runTest(
+    "**Important!\n\nParagraph",
+    {
+      content: `Important!\nParagraph\n`,
+      annotations: [
+        {
+          type: "block",
+          start: 0,
+          end: 11,
+          attributes: { level: 1, viewType: "document" },
+        },
+        {
+          type: "bold",
+          start: 0,
+          end: 10,
+          attributes: { delimiter: "**", open: true },
+        },
+        {
+          type: "block",
+          start: 11,
+          end: 21,
+          attributes: { level: 1, viewType: "document" },
+        },
+      ],
+    },
+    { debug: true }
+  )
+);
+
+test(
+  "End line with single asterisk",
+  runTest("Important*\n\nParagraph", {
+    content: `Important*\nParagraph\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 11,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "block",
+        start: 11,
+        end: 21,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
+);
+
+test(
+  "Unclosed bolding (underscore)",
+  runTest(
+    "__Important!\n\nParagraph",
+    {
+      content: `Important!\nParagraph\n`,
+      annotations: [
+        {
+          type: "block",
+          start: 0,
+          end: 11,
+          attributes: { level: 1, viewType: "document" },
+        },
+        {
+          type: "bold",
+          start: 0,
+          end: 10,
+          attributes: { delimiter: "__", open: true },
+        },
+        {
+          type: "block",
+          start: 11,
+          end: 21,
+          attributes: { level: 1, viewType: "document" },
+        },
+      ],
+    },
+    { debug: true }
+  )
+);
+
+test(
+  "Unclosed italics (star)",
+  runTest(
+    "*Important!\n\nParagraph",
+    {
+      content: `Important!\nParagraph\n`,
+      annotations: [
+        {
+          type: "block",
+          start: 0,
+          end: 11,
+          attributes: { level: 1, viewType: "document" },
+        },
+        {
+          type: "italics",
+          start: 0,
+          end: 10,
+          attributes: { delimiter: "*", open: true },
+        },
+        {
+          type: "block",
+          start: 11,
+          end: 21,
+          attributes: { level: 1, viewType: "document" },
+        },
+      ],
+    },
+    { debug: true }
+  )
+);
+
+test(
+  "Unclosed italics (underscore)",
+  runTest(
+    "_Important!\n\nParagraph",
+    {
+      content: `Important!\nParagraph\n`,
+      annotations: [
+        {
+          type: "block",
+          start: 0,
+          end: 11,
+          attributes: { level: 1, viewType: "document" },
+        },
+        {
+          type: "italics",
+          start: 0,
+          end: 10,
+          attributes: { delimiter: "_", open: true },
+        },
+        {
+          type: "block",
+          start: 11,
+          end: 21,
+          attributes: { level: 1, viewType: "document" },
+        },
+      ],
+    },
+    { debug: true }
+  )
+);
+
+test(
+  "end line with double asterisk",
+  runTest("Important**\n\nParagraph", {
+    content: `Important**\nParagraph\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 12,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "block",
+        start: 12,
+        end: 22,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
+);
+
+test(
+  "end line with double underscore",
+  runTest("Important__\n\nParagraph", {
+    content: `Important__\nParagraph\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 12,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "block",
+        start: 12,
+        end: 22,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
+);
+
+test(
+  "Underscore preceeded by word character does not italicize",
+  runTest("Hello_world", {
+    content: `Hello_world\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 12,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
+);
+
+test(
+  "Underscore at end of word is text",
+  runTest("Hello_ _world_", {
+    content: `Hello_ world\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 13,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "italics",
+        start: 7,
+        end: 12,
+        attributes: { delimiter: "_" },
+      },
+    ],
+  })
+);
+
+test.skip(
+  "three dash",
+  runTest("---", {
+    content: `${String.fromCharCode(0)}\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 2,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "custom",
+        start: 0,
+        end: 1,
+        attributes: { name: "horizontalLine" },
+      },
+    ],
+  })
+);
+
+test.skip(
+  "three underscore",
+  runTest("___", {
+    content: `${String.fromCharCode(0)}\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 2,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "custom",
+        start: 0,
+        end: 1,
+        attributes: { name: "horizontalLine" },
+      },
+    ],
+  })
+);
+
+test.skip(
+  "three star",
+  runTest("***", {
+    content: `${String.fromCharCode(0)}\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 2,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "custom",
+        start: 0,
+        end: 1,
+        attributes: { name: "horizontalLine" },
+      },
+    ],
+  })
+);
+
+test.skip(
+  "Asterisk bullets",
+  runTest("* First\n* Second", {
+    content: `First\nSecond\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 6,
+        attributes: { level: 1, viewType: "bullet" },
+      },
+      {
+        type: "block",
+        start: 6,
+        end: 13,
+        attributes: { level: 1, viewType: "bullet" },
+      },
+    ],
+  })
+);
+
+test(
+  "Start bolding end with asterisk",
+  runTest("**Important*\n\nParagraph", {
+    content: `Important*\nParagraph\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 11,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "bold",
+        start: 0,
+        end: 10,
+        attributes: { delimiter: "**", open: true },
+      },
+      {
+        type: "block",
+        start: 11,
+        end: 21,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
 );

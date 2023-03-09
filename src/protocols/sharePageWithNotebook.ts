@@ -1,14 +1,12 @@
 import type { InitialSchema } from "samepage/internal/types";
 import loadSharePageWithNotebook from "samepage/protocols/sharePageWithNotebook";
-import atJsonParser from "samepage/utils/atJsonParser";
-// @ts-ignore figure this out later - it compiles at least
-import leafGrammar from "../utils/leafGrammar.ne";
 import type SamePagePlugin from "../main";
 import { Keymap, MarkdownView, TFile } from "obsidian";
 import { v4 } from "uuid";
 import atJsonToObsidian from "../utils/atJsonToObsidian";
 import sha256 from "crypto-js/sha256";
 import { has as isShared } from "samepage/utils/localAutomergeDb";
+import leafParser from "../utils/leafParser";
 
 const hashes: Record<number, string> = {};
 const hashFn = (s: string) => sha256(s).toString();
@@ -47,7 +45,7 @@ const calculateState = async (
       ? await plugin.app.vault.cachedRead(abstractFile)
       : "";
 
-  return atJsonParser(leafGrammar, content);
+  return leafParser(content);
 };
 
 const getCurrentNotebookPageId = (plugin: SamePagePlugin) =>

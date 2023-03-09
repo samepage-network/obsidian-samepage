@@ -1,11 +1,5 @@
-const execSync = require("child_process").execSync;
 const fs = require("fs");
 const esbuild = require("esbuild").build;
-
-execSync(
-  "npx nearleyc src/utils/leafGrammar.ne --out src/utils/leafGrammar.ts",
-  { stdio: "inherit" }
-);
 
 const packageJson = JSON.parse(
   fs.readFileSync("node_modules/obsidian/package.json").toString()

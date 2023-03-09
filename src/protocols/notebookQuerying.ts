@@ -1,12 +1,10 @@
-import atJsonParser from "samepage/utils/atJsonParser";
-// @ts-ignore for now until we fix types
-import leafGrammar from "../utils/leafGrammar.ne";
 import setupNotebookQuerying from "samepage/protocols/notebookQuerying";
 import { TFile } from "obsidian";
 import type SamePagePlugin from "../main";
 import createHTMLObserver from "samepage/utils/createHTMLObserver";
 import ExternalNotebookReference from "../components/ExternalNotebookReference";
 import renderOverlay from "../utils/renderOverlay";
+import leafParser from "../utils/leafParser";
 
 const setup = (plugin: SamePagePlugin) => {
   const { unload } = setupNotebookQuerying({
@@ -18,7 +16,7 @@ const setup = (plugin: SamePagePlugin) => {
         abstractFile instanceof TFile
           ? await plugin.app.vault.cachedRead(abstractFile)
           : "";
-      return atJsonParser(leafGrammar, content || "");
+      return leafParser(content);
     },
     onQueryResponse: async ({ data, request }) => {
       document.body.dispatchEvent(

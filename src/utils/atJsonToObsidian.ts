@@ -12,16 +12,26 @@ const atJsonToObsidian = (state: InitialSchema) => {
       content: state.content.toString(),
     },
     applyAnnotation: {
-      bold: ({ content, appAttributes }) => ({
-        prefix: appAttributes?.kind || "**",
-        suffix: appAttributes?.kind || `**`,
-        replace: content === String.fromCharCode(0),
-      }),
-      italics: ({ content, appAttributes }) => ({
-        prefix: appAttributes?.kind || "_",
-        suffix: appAttributes?.kind || `_`,
-        replace: content === String.fromCharCode(0),
-      }),
+      bold: ({ content, attributes }) => {
+        const validDelimiters = new Set(["**", "__"]);
+        const delimiter = attributes?.delimiter || "**";
+        const prefix = validDelimiters.has(delimiter) ? delimiter : "**";
+        return {
+          prefix,
+          suffix: attributes?.open ? "" : prefix,
+          replace: content === String.fromCharCode(0),
+        };
+      },
+      italics: ({ content, attributes }) => {
+        const validDelimiters = new Set(["*", "_"]);
+        const delimiter = attributes?.delimiter || "**";
+        const prefix = validDelimiters.has(delimiter) ? delimiter : "**";
+        return ({
+          prefix,
+          suffix: attributes?.open ? "" : prefix,
+          replace: content === String.fromCharCode(0),
+        });
+      },
       strikethrough: ({ content }) => ({
         prefix: "~~",
         suffix: `~~`,
