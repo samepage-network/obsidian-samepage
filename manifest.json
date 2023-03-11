@@ -1,7 +1,7 @@
 {
     "id": "samepage",
     "name": "SamePage",
-    "version": "2.4.2",
+    "version": "2.5.0",
     "minAppVersion": "0.15.0",
     "description": "Official Obsidian client into the inter-TFT-protocol",
     "author": "samepage-network",
