@@ -622,14 +622,14 @@ test(
 test(
   "Odd number double tilde",
   runTest("Deal ~~with~~ odd ~~tildes", {
-    content: `Deal with odd ~~tildes\n`,
+    content: `Deal with odd tildes\n`,
     annotations: [
       {
         attributes: {
           level: 1,
           viewType: "document",
         },
-        end: 23,
+        end: 21,
         start: 0,
         type: "block",
       },
@@ -638,6 +638,12 @@ test(
         end: 9,
         type: "strikethrough",
         attributes: { delimiter: "~~" },
+      },
+      {
+        start: 14,
+        end: 20,
+        type: "strikethrough",
+        attributes: { delimiter: "~~", open: true },
       },
     ],
   })
@@ -1094,32 +1100,29 @@ test(
 
 test(
   "Unclosed bolding (star)",
-  runTest(
-    "**Important!\n\nParagraph",
-    {
-      content: `Important!\nParagraph\n`,
-      annotations: [
-        {
-          type: "block",
-          start: 0,
-          end: 11,
-          attributes: { level: 1, viewType: "document" },
-        },
-        {
-          type: "bold",
-          start: 0,
-          end: 10,
-          attributes: { delimiter: "**", open: true },
-        },
-        {
-          type: "block",
-          start: 11,
-          end: 21,
-          attributes: { level: 1, viewType: "document" },
-        },
-      ],
-    }
-  )
+  runTest("**Important!\n\nParagraph", {
+    content: `Important!\nParagraph\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 11,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "bold",
+        start: 0,
+        end: 10,
+        attributes: { delimiter: "**", open: true },
+      },
+      {
+        type: "block",
+        start: 11,
+        end: 21,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
 );
 
 test(
@@ -1145,92 +1148,83 @@ test(
 
 test(
   "Unclosed bolding (underscore)",
-  runTest(
-    "__Important!\n\nParagraph",
-    {
-      content: `Important!\nParagraph\n`,
-      annotations: [
-        {
-          type: "block",
-          start: 0,
-          end: 11,
-          attributes: { level: 1, viewType: "document" },
-        },
-        {
-          type: "bold",
-          start: 0,
-          end: 10,
-          attributes: { delimiter: "__", open: true },
-        },
-        {
-          type: "block",
-          start: 11,
-          end: 21,
-          attributes: { level: 1, viewType: "document" },
-        },
-      ],
-    }
-  )
+  runTest("__Important!\n\nParagraph", {
+    content: `Important!\nParagraph\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 11,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "bold",
+        start: 0,
+        end: 10,
+        attributes: { delimiter: "__", open: true },
+      },
+      {
+        type: "block",
+        start: 11,
+        end: 21,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
 );
 
 test(
   "Unclosed italics (star)",
-  runTest(
-    "*Important!\n\nParagraph",
-    {
-      content: `Important!\nParagraph\n`,
-      annotations: [
-        {
-          type: "block",
-          start: 0,
-          end: 11,
-          attributes: { level: 1, viewType: "document" },
-        },
-        {
-          type: "italics",
-          start: 0,
-          end: 10,
-          attributes: { delimiter: "*", open: true },
-        },
-        {
-          type: "block",
-          start: 11,
-          end: 21,
-          attributes: { level: 1, viewType: "document" },
-        },
-      ],
-    }
-  )
+  runTest("*Important!\n\nParagraph", {
+    content: `Important!\nParagraph\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 11,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "italics",
+        start: 0,
+        end: 10,
+        attributes: { delimiter: "*", open: true },
+      },
+      {
+        type: "block",
+        start: 11,
+        end: 21,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
 );
 
 test(
   "Unclosed italics (underscore)",
-  runTest(
-    "_Important!\n\nParagraph",
-    {
-      content: `Important!\nParagraph\n`,
-      annotations: [
-        {
-          type: "block",
-          start: 0,
-          end: 11,
-          attributes: { level: 1, viewType: "document" },
-        },
-        {
-          type: "italics",
-          start: 0,
-          end: 10,
-          attributes: { delimiter: "_", open: true },
-        },
-        {
-          type: "block",
-          start: 11,
-          end: 21,
-          attributes: { level: 1, viewType: "document" },
-        },
-      ],
-    }
-  )
+  runTest("_Important!\n\nParagraph", {
+    content: `Important!\nParagraph\n`,
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 11,
+        attributes: { level: 1, viewType: "document" },
+      },
+      {
+        type: "italics",
+        start: 0,
+        end: 10,
+        attributes: { delimiter: "_", open: true },
+      },
+      {
+        type: "block",
+        start: 11,
+        end: 21,
+        attributes: { level: 1, viewType: "document" },
+      },
+    ],
+  })
 );
 
 test(

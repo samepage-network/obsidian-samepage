@@ -26,15 +26,15 @@ const atJsonToObsidian = (state: InitialSchema) => {
         const validDelimiters = new Set(["*", "_"]);
         const delimiter = attributes?.delimiter || "**";
         const prefix = validDelimiters.has(delimiter) ? delimiter : "**";
-        return ({
+        return {
           prefix,
           suffix: attributes?.open ? "" : prefix,
           replace: content === String.fromCharCode(0),
-        });
+        };
       },
-      strikethrough: ({ content }) => ({
+      strikethrough: ({ content, attributes }) => ({
         prefix: "~~",
-        suffix: `~~`,
+        suffix: attributes?.open ? "" : `~~`,
         replace: content === String.fromCharCode(0),
       }),
       link: ({ attributes: { href }, content }) => ({
