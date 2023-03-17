@@ -23,7 +23,7 @@ jobs:
       - name: install
         run: npm install
       - name: install playwright
-        run: npx playwright install
+        run: npx playwright install chromium
       - name: test
         run: npm t
       - name: Upload Integration Test Coverage to Codecov
