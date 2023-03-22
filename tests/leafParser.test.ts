@@ -1415,3 +1415,22 @@ test(
     ],
   })
 );
+
+// This is a tricky problem to solve - our lexer reads this as boldAsterisk, boldAsterisk, text. 
+// We somehow need read this as boldAsterisk, italicsAsterisk, text.
+test.skip(
+  "Four asterisks to start",
+  runTest("****text", {
+    content: "*text\n",
+    annotations: [
+      {
+        type: "block",
+        start: 0,
+        end: 6,
+        attributes: { level: 1, viewType: "document" },
+      },
+      { type: "bold", start: 0, end: 5, attributes: { delimiter: "**" } },
+      { type: "italics", start: 0, end: 5, attributes: { delimiter: "**" } },
+    ],
+  })
+);
