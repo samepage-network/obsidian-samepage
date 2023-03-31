@@ -30,12 +30,11 @@
   "homepage": "https://github.com/samepage-network/obsidian-samepage#readme",
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",
-    "esbuild": "^0.15.18",
     "obsidian": "^0.16.0"
   },
   "dependencies": {
     "axios": "^0.27.2",
     "crypto-js": "^4.1.1",
-    "samepage": "^0.49.0"
+    "samepage": "^0.52.5"
   }
 }
