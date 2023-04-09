@@ -135,7 +135,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
   plugin.registerEvent(
     plugin.app.vault.on("modify", async (file) => {
       const notebookPageId = file.path.replace(/\.md$/, "");
-      if (file instanceof TFile && isShared(notebookPageId)) {
+      if (file instanceof TFile && await isShared(notebookPageId)) {
         if (
           hashes[file.stat.mtime] ===
           hashFn(await plugin.app.vault.cachedRead(file))
