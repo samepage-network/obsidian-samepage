@@ -36,5 +36,23 @@
     "axios": "^0.27.2",
     "crypto-js": "^4.1.1",
     "samepage": "^0.59.8"
+  },
+  "samepage": {
+    "install": {
+      "steps": [
+        {
+          "title": "Go to Settings",
+          "children": "image"
+        },
+        {
+          "title": "Browse Community Plugins",
+          "children": "image"
+        },
+        {
+          "title": "Enable SamePage!",
+          "children": "image"
+        }
+      ]
+    }
   }
 }
