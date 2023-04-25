@@ -1,4 +1,4 @@
-import type { InitialSchema } from "samepage/internal/types";
+import type { SamePageSchema } from "samepage/internal/types";
 import loadSharePageWithNotebook from "samepage/protocols/sharePageWithNotebook";
 import type SamePagePlugin from "../main";
 import { Keymap, MarkdownView, TFile } from "obsidian";
@@ -13,7 +13,7 @@ const hashFn = (s: string) => sha256(s).toString();
 
 const applyState = async (
   notebookPageId: string,
-  state: InitialSchema,
+  state: SamePageSchema,
   plugin: SamePagePlugin
 ) => {
   const expectedText = atJsonToObsidian({
@@ -56,11 +56,15 @@ const sharedPagePaths: Record<string, string> = {};
 const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
   const unloads: Record<string, (() => void) | undefined> = {};
   const { unload, refreshContent } = loadSharePageWithNotebook({
-    applyState: (id, state) => applyState(id, state, plugin),
-    calculateState: (id) => calculateState(id, plugin),
+    decodeState: (id, state) => applyState(id, state.$body, plugin),
+    encodeState: (id) =>
+      calculateState(id, plugin).then(($body) => ({ $body })),
     getCurrentNotebookPageId: async () => getCurrentNotebookPageId(plugin),
-    createPage: async (title) => {
-      const pathParts = title.split("/");
+    ensurePageByTitle: async (title) => {
+      const notebookPageId = `${title.content}.md`;
+      const exists = !!plugin.app.vault.getAbstractFileByPath(notebookPageId);
+      if (exists) return { notebookPageId, preExisting: true };
+      const pathParts = title.content.split("/");
       await Promise.all(
         pathParts.slice(0, -1).map((_, i, a) => {
           const path = a.slice(0, i + 1).join("/");
@@ -69,7 +73,8 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
           }
         })
       );
-      return plugin.app.vault.create(`${title}.md`, "");
+      await plugin.app.vault.create(notebookPageId, "");
+      return { notebookPageId, preExisting: false };
     },
     deletePage: async (title) => {
       const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
@@ -82,14 +87,13 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
       const newFile = plugin.app.vault.getAbstractFileByPath(`${title}.md`);
       if (newFile instanceof TFile) {
         if (active) {
-          return active.leaf.openFile(newFile);
+          await active.leaf.openFile(newFile);
         } else {
-          return app.workspace.openLinkText(title, title);
+          await app.workspace.openLinkText(title, title);
         }
       }
+      return title;
     },
-    doesPageExist: async (title) =>
-      !!plugin.app.vault.getAbstractFileByPath(`${title}.md`),
     overlayProps: {
       viewSharedPageProps: {
         onLinkClick: (title, e) => {
@@ -135,7 +139,7 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
   plugin.registerEvent(
     plugin.app.vault.on("modify", async (file) => {
       const notebookPageId = file.path.replace(/\.md$/, "");
-      if (file instanceof TFile && await isShared(notebookPageId)) {
+      if (file instanceof TFile && (await isShared(notebookPageId))) {
         if (
           hashes[file.stat.mtime] ===
           hashFn(await plugin.app.vault.cachedRead(file))
