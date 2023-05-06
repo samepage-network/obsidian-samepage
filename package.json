@@ -6,9 +6,9 @@
   "scripts": {
     "postversion": "node scripts/postversion.js",
     "postinstall": "patch-package --patch-dir node_modules/samepage/patches",
-    "start": "node scripts/start.js",
+    "start": "samepage start",
     "pretest": "node scripts/pretest.js",
-    "test": "node scripts/test.js"
+    "test": "samepage test"
   },
   "repository": {
     "type": "git",
@@ -35,9 +35,15 @@
   "dependencies": {
     "axios": "^0.27.2",
     "crypto-js": "^4.1.1",
-    "samepage": "^0.64.8"
+    "samepage": "^0.65.12"
   },
   "samepage": {
+    "external": "obsidian",
+    "include": [
+      "manifest.json"
+    ],
+    "mirror": "$OBSIDIAN_PLUGIN_PATH",
+    "format": "cjs",
     "install": {
       "steps": [
         {

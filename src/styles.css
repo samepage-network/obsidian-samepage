@@ -1,3 +1,5 @@
+@import "samepage/samepage.css";
+
 body {
   font-size: 16px;
   color: var(--text-normal);

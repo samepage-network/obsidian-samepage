@@ -22,4 +22,4 @@ jobs:
       - name: install
         run: npm install
       - name: build
-        run: node scripts/build.js
+        run: npx samepage build
