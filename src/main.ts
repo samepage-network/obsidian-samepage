@@ -127,7 +127,7 @@ class SamePagePlugin extends Plugin {
       workspace: this.app.vault.getName(),
       renderOverlay,
       onAppLog: (evt) => evt.intent !== "debug" && new Notice(evt.content),
-      notificationContainerPath: `.workspace-tabs.mod-top-right-space .workspace-tab-header-container .workspace-tab-header-tab-list`,
+      notificationContainerPath: `.mod-root .workspace-tabs .workspace-tab-header-container .workspace-tab-header-tab-list`,
     });
     return unload;
   }
