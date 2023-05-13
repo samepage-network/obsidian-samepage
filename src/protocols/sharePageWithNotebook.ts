@@ -127,7 +127,10 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
             if (sel) {
               const existingNotebookPageId = sharedPagePaths[sel];
               if (existingNotebookPageId === notebookPageId) return;
-              if (existingNotebookPageId) onunload(existingNotebookPageId);
+              if (existingNotebookPageId) {
+                view.containerEl.removeAttribute("data-samepage-shared");
+                onunload(existingNotebookPageId);
+              }
             }
             onload(notebookPageId);
           });
