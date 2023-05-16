@@ -24,7 +24,9 @@ const runTest =
     if (!opts.skipInverse) expect(atJsonToObsidian(output)).toEqual(md);
   };
 
-test.beforeAll(() => setupRegistry({ app: 3, getSetting: () => notebookUuid }));
+test.beforeAll(() =>
+  setupRegistry({ app: "obsidian", getSetting: () => notebookUuid })
+);
 
 test(
   "Hello World Example",
@@ -1416,7 +1418,7 @@ test(
   })
 );
 
-// This is a tricky problem to solve - our lexer reads this as boldAsterisk, boldAsterisk, text. 
+// This is a tricky problem to solve - our lexer reads this as boldAsterisk, boldAsterisk, text.
 // We somehow need read this as boldAsterisk, italicsAsterisk, text.
 test.skip(
   "Four asterisks to start",
