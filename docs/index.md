@@ -9,7 +9,7 @@ A **Notebook** in Obsidian is a vault. Your personal vault is an example of a **
 
 ## Installing the Live Version
 
-The Live version of the SamePage extension is available in th Obsidian Community Plugins Store!
+The Live version of the SamePage extension is available in the Obsidian Community Plugins Store!
 
 First, open your Obsidian Settings by clicking on the settings gear on the bottom left:
 

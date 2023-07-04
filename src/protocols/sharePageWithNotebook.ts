@@ -54,7 +54,6 @@ const getCurrentNotebookPageId = (plugin: SamePagePlugin) =>
 const sharedPagePaths: Record<string, string> = {};
 
 const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
-  const unloads: Record<string, (() => void) | undefined> = {};
   const { unload, refreshContent } = loadSharePageWithNotebook({
     decodeState: (id, state) => applyState(id, state.$body, plugin),
     encodeState: (id) =>
@@ -138,26 +137,26 @@ const setupSharePageWithNotebook = (plugin: SamePagePlugin) => {
         },
       },
     },
+    onConnect: () => {
+      plugin.registerEvent(
+        plugin.app.vault.on("modify", async (file) => {
+          const notebookPageId = file.path.replace(/\.md$/, "");
+          if (file instanceof TFile && (await isShared(notebookPageId))) {
+            if (
+              hashes[file.stat.mtime] ===
+              hashFn(await plugin.app.vault.cachedRead(file))
+            ) {
+              delete hashes[file.stat.mtime];
+              return;
+            }
+            refreshContent({ notebookPageId });
+          }
+        })
+      );
+      return () => {};
+    },
   });
-  plugin.registerEvent(
-    plugin.app.vault.on("modify", async (file) => {
-      const notebookPageId = file.path.replace(/\.md$/, "");
-      if (file instanceof TFile && (await isShared(notebookPageId))) {
-        if (
-          hashes[file.stat.mtime] ===
-          hashFn(await plugin.app.vault.cachedRead(file))
-        ) {
-          delete hashes[file.stat.mtime];
-          return;
-        }
-        refreshContent({ notebookPageId });
-      }
-    })
-  );
-  return () => {
-    Object.values(unloads).forEach((u) => u?.());
-    unload();
-  };
+  return unload;
 };
 
 export default setupSharePageWithNotebook;
